@@ -2,9 +2,7 @@
 % Please edit documentation in R/s2bak_etc.R
 \name{s2bak.maxnet}
 \alias{s2bak.maxnet}
-\title{Modified maxnet function for s2bak
-
-Wrapper function for maxnet's maxnet function. Converts the arguments for maxnet to the necessary structure for fitting an SDM (an 'S3'-like approach)}
+\title{Modified maxnet function for s2bak}
 \usage{
 s2bak.maxnet(formula, data, ...)
 }
@@ -17,7 +15,5 @@ s2bak.maxnet(formula, data, ...)
 Output of the maxnet model
 }
 \description{
-Modified maxnet function for s2bak
-
-Wrapper function for maxnet's maxnet function. Converts the arguments for maxnet to the necessary structure for fitting an SDM (an 'S3'-like approach)
+Wrapper function for maxnet::maxnet function. The function converts the arguments for maxnet to the necessary structure for fitting an SDM within S2BaK, where the first and second arguments are the formula and dataset, respectively.
 }

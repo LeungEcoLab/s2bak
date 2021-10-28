@@ -2,9 +2,7 @@
 % Please edit documentation in R/s2bak_etc.R
 \name{s2bak.addPred}
 \alias{s2bak.addPred}
-\title{Add predictor to the formula.
-
-Adds 'so' (or other specified predictor) to the formula as an additional predictor. Assumes formula follows a "Y ~ X" format. Does not add 'pred' if it is already in the formula.}
+\title{Add predictor to the formula.}
 \usage{
 s2bak.addPred(formula, pred = "so")
 }
@@ -17,7 +15,5 @@ s2bak.addPred(formula, pred = "so")
 A formula with added predictor
 }
 \description{
-Add predictor to the formula.
-
-Adds 'so' (or other specified predictor) to the formula as an additional predictor. Assumes formula follows a "Y ~ X" format. Does not add 'pred' if it is already in the formula.
+Adds 'so' (or other specified predictor) to the formula as an additional predictor. The arugment 'formula' assumes the formula follows a "Y ~ X" format. The functino will not add the predictor if it is already in the formula.
 }

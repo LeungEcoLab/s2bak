@@ -4,9 +4,7 @@
 \alias{s2bak.predict.BaK}
 \alias{s2bak.predict.SOS2}
 \alias{s2bak.predict}
-\title{Adjust SO model predictions using BaK
-
-Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.}
+\title{Adjust SO model predictions using BaK}
 \usage{
 s2bak.predict.BaK(predictions, bak, trait, data)
 
@@ -36,23 +34,23 @@ s2bak.predict(
 
 \item{bak}{Output from s2bak.BaK(), with fitted BaK model}
 
-\item{trait}{= Trait data, optional if model is S2 or SO}
+\item{trait}{Trait data, optional if model is S2 or SO}
 
 \item{data}{Environmental data, with rows corresponding to rows of predictions}
 
-\item{model}{= Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or s2bak.combine.}
+\item{model}{Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or s2bak.combine.}
 
-\item{newdata}{= Data to predict}
+\item{newdata}{Environmental data to predict}
 
-\item{predict.fun}{= prediction function for SDM (for S2 and SO)}
+\item{predict.fun}{prediction function for SDM (for S2 and SO)}
 
-\item{doReadout}{= Whether to force doReadout in SOS2}
+\item{doReadout}{Whether to force doReadout in SOS2}
 
-\item{verbose}{= add print statements}
+\item{verbose}{Add print statements}
 
-\item{ncores}{= Paralellise SO/S2 predictions, if NA then auto-pick it}
+\item{ncores}{Paralellise SO/S2 predictions, if NA then auto-pick it}
 
-\item{...}{= Any additional arguments for the predict.fun}
+\item{...}{Any additional arguments for the predict.fun}
 
 \item{class}{Whether we're dealing with SO or S2 models, which is only used when providing a directory so we can identify which class we are interested in.}
 }
@@ -64,17 +62,11 @@ Generates a matrix of predictions with rows being indices in the data.frame, and
 Model predictions as a data.frame with columns for each species and rows for each location
 }
 \description{
-Adjust SO model predictions using BaK
-
 Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.
 
-Make predictions using fitted SO, S2, BaK or S2BaK class models
-
-It should automatically detect which model we have based on output. Can provide either output from s2bak.S2 or s2bak.SO.
-
-Predict with S2BaK objects
+The function automatically detects which model class is used, which can be either the output from s2bak.S2 or s2bak.SO.
 
 Wrapper function that detects the class of the inputed model and makes the appropriate prediction.
 
-If S2 or SO, will make prediction using s2bak.predict.SOS2. If given SO+BaK (that is, an S2BaK class model with S2 = NULL, for example through combine without S2), will make prediction and adjustment which requires trait data for the relevant species. If the full S2BaK model, will make predictions for species in S2, and SO+BaK for the remainder
+If the provided model is s2bak.S2 or s2bak.SO, predictions will be made using s2bak.predict.SOS2. If an SO model with BaK is provided (that is, an S2BaK class model with S2 = NULL, for example through combine without a provided S2), the functions returns adjusted predictions requiring trait data for the species. If the full S2BaK model (SO, S2 and BaK are provided), the function will make predictions with S2 for species with sightings and survey data, and adjusted predictions using SO and BaK for species without survey data.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/s2bak_funcs.R
 \name{s2bak.combine}
 \alias{s2bak.combine}
-\title{Combine separately fitted SO, S2 and BaK models into a single S2BaK object}
+\title{Combine SO, S2 and BaK objects}
 \usage{
 s2bak.combine(SO = NULL, S2 = NULL, BaK = NULL)
 }
@@ -17,8 +17,7 @@ s2bak.combine(SO = NULL, S2 = NULL, BaK = NULL)
 Object of class s2bak.S2Bak, equivalent to having run s2bak.S2BaK() for the entire dataset
 }
 \description{
-Assuming everything was done correctly in the previous, the output should mimic an S2BaK function
-}
-\details{
-It is possible to only provide SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
+Combines separately fitted SO, S2 and BaK models into a single S2BaK object. The output will be identical to running the entire process in s2bak.S2BaK function, and can be used in the same situations.
+
+Models can be partially provided, for instance only SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
 }

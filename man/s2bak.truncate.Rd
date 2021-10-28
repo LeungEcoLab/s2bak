@@ -17,5 +17,5 @@ s2bak.truncate(x, min = NA, max = NA)
 Truncated x values
 }
 \description{
-Truncate values based on min and max input
+Truncate provided numerical values based on a defined minimum and maximum cutoff.
 }

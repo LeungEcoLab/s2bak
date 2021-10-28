@@ -6,13 +6,7 @@
 \alias{s2bak.SO}
 \alias{s2bak.BaK}
 \alias{s2bak.S2BaK}
-\title{Build sightings-only or S2 species distribution models for multiple species.
-
-s2bak.SO function fits SDMs for each provided species within the same system, using a specified SDM approach (or the default which are GAMs from the mgcv package). Parallelisation is possible when processing each SDM, with the default being 1 core.
-
-The s2bak.S2 function fits SDMs using species sightings, background sites and survey sites, differentiating between them using a binary 'so' predictor, denoting sightings-only (1) or survey (0).
-
-Saving SDMs to the output may be computationally intensive, particularly with large datasets and many species. To reduce the possibility of crashing, readout and the version = "short" may be used, which does not output the fitted models but instead saves it to the directory specified in readout.}
+\title{Build sightings-only or S2 species distribution models for multiple species.}
 \usage{
 s2bak.S2(
   formula,
@@ -70,11 +64,11 @@ s2bak.S2BaK(
 \arguments{
 \item{formula}{Formula for the SDMs, which serves as input for the given SDM. Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can be provided with index names corresponding to species. In this case, species will be fit using their corresponding formula.}
 
-\item{data}{Survey environmental data. Assumes all columns correspond to relevant environmental data and match with predictions/survey data.}
+\item{data}{Survey environmental data with columns for environmental data and rows for each site. Assumes all columns correspond to relevant environmental data and match with predictions/survey data. Also assumes that inputted columns are all relevant in modelling location bias.}
 
 \item{obs}{Species observations as a data.frame, with a column for species name (must be labelled 'species') and column of index of observations to reflect presences. If the index column name is not found in 'data', it assumes row number.}
 
-\item{surv}{Survey data as a matrix, with rows corresponding to environmental data rows.}
+\item{surv}{Survey data as a matrix, with rows corresponding to each site.}
 
 \item{background}{Background sites (pseudo-absences) used to fit the presence-only model, provided as a vector of indices of data (following the same column name as observations). If the index column name is not found in 'data', it assumes row number within 'data'. If left as NA, it will randomly sample 'nbackground' sites, with or without overlap ('overlapbackground'). Currently, only one set of background sites can be used.}
 
@@ -88,7 +82,7 @@ s2bak.S2BaK(
 
 \item{ncores}{Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.}
 
-\item{verbose}{Make print statements}
+\item{verbose}{Prints statements of species being fit as we go.}
 
 \item{readout}{Directory to save fitted SDMs and background sites. If NA, it will not save any SDMs. Provides an additional output that shows where the SDM is saved (with file name). The output in this directory can later be used in other functions such as s2bak.predict.SOS2.}
 
@@ -96,23 +90,31 @@ s2bak.S2BaK(
 
 \item{...}{Other arguments that are passed to the SDM function (sdm.fun).}
 
-\item{predictions}{Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species}
+\item{predictions}{Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species and rows for each site.}
 
-\item{trait}{Full trait data, as a data.frame with 'species' as a column and relevant traits for the rest of them. Do not necessarily have to be involved in the survey, but will be used in the final adjustment model as final output.}
+\item{trait}{Full trait data for the species predictions, as a data.frame with 'species' as a column and relevant traits for the remainder. Like with the predictions, the species in the dataset do not necessarily have to possess survey data, but will be used in the final adjustment model as final output.}
 }
 \value{
-A list of fitted SDMs for each species.
-
-SO class model
+An object of class "s2bak.S2", providing fitted SDMs for each species based on the provided SDM modelling approach. The primary difference between SO and S2 models are the additional data points from the survey data, and an additional binary predictor 'so' which denotes whether the data is from presence-background (1) or presence-absence data (0).
 
 Bias adjustment models, the kernels (location and species), as a second-order GLM.
 
 An S2BaK class object containing S2, SO and BaK.
 }
 \description{
+s2bak.SO function fits SDMs for each provided species within the same system, using a specified SDM approach (or the default which are GAMs from the mgcv package). Parallelisation is possible when processing each SDM, with the default being 1 core.
+
+The s2bak.S2 function fits SDMs using species sightings, background sites and survey sites, differentiating between them using a binary 'so' predictor, denoting sightings-only (1) or survey (0).
+
+Saving SDMs to the output may be computationally intensive, particularly with large datasets and many species. To reduce the possibility of crashing, readout and the version = "short" may be used, which does not output the fitted models but instead saves it to the directory specified in readout.
+
+Builds bias adjustment kernel (BaK) for a fitted sightings-only SDM. Provides three models, as generalized linear models (GLMs): modelling location bias, modelling species bias and an adjustment model that combines model predictions with the output from the other two models.
+
+The dataset assumes the rows for the predictions, survey and data arguments all align and match.
+
 Build S2BaK from top to bottom. Has functionality for parallelisation, but the default is 1 core.
-}
-\details{
-Fits SO models for all species, S2 models for species with survey data. \link{Combine with S2 and SO, note that we include predict.fun, traite and force surv as a mandatory input}
-Right now, assumes that all columns/variables in 'data' are relevant for the location bias model (minus the index or whatever).
+
+Fits SO models for all species, S2 models for species with survey data and a BaK model for adjusted predictions.
+
+Assumes that all columns/variables in 'data' are relevant for the location bias model.
 }

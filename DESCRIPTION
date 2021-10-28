@@ -4,7 +4,7 @@ Version: 0.0.0.1
 Authors@R: 
     person("Dat", "Nguyen", , "dat.nguyen@mail.mcgill.ca", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: Fit species distribution models (SDMs) for multiple species using S2BaK, and predict species distributions using the models.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
@@ -12,3 +12,7 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Imports: reshape2, foreach, doParallel, maxnet, mgcv
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr

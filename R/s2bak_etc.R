@@ -1,8 +1,8 @@
 #' Truncate values based on min and max input
 #'
-#' @param x = Values to truncate, as numerical
-#' @param min = Minimum value to truncate, where \code{x <= min} with be \code{min}. If left as NA it will use the minimum value of x.
-#' @param max = Maximum value to truncate, where \code{x >= max} with be \code{max}. If left as NA it will use the maximum value of x.
+#' @param x Numerical values to truncate
+#' @param min Minimum value to truncate, where \code{x <= min} with be \code{min}. If left as NA it will use the minimum value of x.
+#' @param max Maximum value to truncate, where \code{x >= max} with be \code{max}. If left as NA it will use the maximum value of x.
 #' @return Truncated x values
 #' @export
 s2bak.truncate = function(x, min = NA, max = NA){
@@ -15,12 +15,12 @@ s2bak.truncate = function(x, min = NA, max = NA){
   return(x)
 }
 
-#' Adds 'so' (or other specified predictor) to the formula as an additional predictor.
+#' @title Add predictor to the formula.
 #' 
 #' Adds 'so' (or other specified predictor) to the formula as an additional predictor. Assumes formula follows a "Y ~ X" format. Does not add 'pred' if it is already in the formula.
 #'
-#' @param formula = Formula or list of formulas to add 'pred' to
-#' @param pred = Predictor name to add to formula
+#' @param formula Formula or list of formulas to add 'pred' to
+#' @param pred Predictor name to add to formula
 #' @return A formula with added predictor
 #' @export
 s2bak.addPred = function(formula, pred = "so"){
@@ -53,12 +53,12 @@ s2bak.addPred = function(formula, pred = "so"){
   }
 }
 
-#' Wrapper function for maxnet's maxnet function
+#' @title Modified maxnet function for s2bak
 #'
-#' Converts the arguments for maxnet to the necessary structure for fitting an SDM (an 'S3'-like approach)
+#' Wrapper function for maxnet's maxnet function. Converts the arguments for maxnet to the necessary structure for fitting an SDM (an 'S3'-like approach)
 #'
-#' @param formula = Formula for fitting the maxnet model
-#' @param data = Fitting dataset including response variable
+#' @param formula Formula for fitting the maxnet model
+#' @param data Fitting dataset including response variable
 #' @return Output of the maxnet model
 #' @export
 s2bak.maxnet = function(formula, data, ...){
@@ -71,11 +71,11 @@ s2bak.maxnet = function(formula, data, ...){
   return(maxnet(p, data, f = formula, ...))
 }
 
-#' Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
+#' @title Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
 #'
-#' @param data = Values to scale, with column names indicating the variable
-#' @param project = Projected values to scale, using the mean and standard deviations of 'env'. If NA, then the function will only scale the environmental values provided
-#' @param getScaleValues = Return mean and standard deviations of each factor
+#' @param data Values to scale, with column names indicating the variable
+#' @param project Projected values to scale, using the mean and standard deviations of 'env'. If NA, then the function will only scale the environmental values provided
+#' @param getScaleValues Return mean and standard deviations of each factor
 #' @return Returns a data.frame of scaled columns for non-categorical and non-binary variables. If getScaleValues or project data is provided, returns as a list.
 #' @export
 s2bak.scale = function(data, project = NA, getScaleValues = FALSE){

@@ -7,20 +7,20 @@
 #' 
 #' Saving SDMs to the output may be computationally intensive, particularly with large datasets and many species. To reduce the possibility of crashing, readout and the version = "short" may be used, which does not output the fitted models but instead saves it to the directory specified in readout.
 #'
-#' @param formula = Formula for the SDMs, which serves as input for the given SDM. Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can be provided with index names corresponding to species. In this case, species will be fit using their corresponding formula.
-#' @param data = Full environmental data used for fitting.
-#' @param obs = Species observations as a data.frame, with a column for species name (must be labelled 'species') and column of index of observations to reflect presences. If the index column name is not found in 'data', it assumes row number.
-#' @param surv = Survey data, given as a data.frame of row/index as the first column for the data following the same name as obs, and each column representing a given species presence (1) or absence (0). It will add the an additional binary predictor to the formula(s), "so", which denotes sightings-only or not. If 'so' is already in formula (e.g. if modifying the variable in any way, then set surv.formula = FALSE). If left as NA, it will fit the SDMs as presence-only models with the function of choice. NOTE: Assumes all species are provided in the survey data, and that they are surveyed over the same sites (i.e. matrix-type).
-#' @param background = Background sites (pseudo-absences) used to fit the presence-only model, provided as a vector of indices of data (following the same column name as observations). If the index column name is not found in 'data', it assumes row number within 'data'. If left as NA, it will randomly sample 'nbackground' sites, with or without overlap ('overlapbackground'). Currently, only one set of background sites can be used.
-#' @param sdm.fun = Model (as function) used for fitting (the default is gam with mgcv). The function must have the formula as their first argument, and 'data' as the parameter for the dataset (including presences and background sites within the data.frame). A wrapper function for maxnet::maxnet() is also available as s2bak.maxnet().
-#' @param overlapbackground = Whether sampled background sites that overlap with observations should be included. By default, it allows overlap. If FALSE, number of background sites may be less than specified or provided.
-#' @param nbackground = Number of background sites to sample. Only applies if background = FALSE.
-#' @param surv.formula = Whether the binary variable 'so', denoting whether sites are sightings-only or survey, should be added to the formula(s). If survey data is not provided, then 'so' will not be added to the formula(s) regardless of whether it is TRUE or FALSE. If there is survey data and surv.formula = FALSE, then 'so' will not be added, and must be included in the initial function call (or it will throw an error).
-#' @param ncores = Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.
-#' @param verbose = Prints statements of species being fit as we go.
-#' @param readout = Directory to save fitted SDMs and background sites. If NA, it will not save any SDMs. Provides an additional output that shows where the SDM is saved (with file name). The output in this directory can later be used in other functions such as s2bak.predict.SOS2.
-#' @param version = Whether the SDMs should be included in the output. With "short", no the fitted SDMs are not provided. Setting to "full" (default) will output the list with all SDMs. Setting to "short" and combined with readout, can considerably reduce RAM usage while saving the progress so far, which is useful when dealing with many species or large datasets.
-#' @param ... = Other arguments that are passed to the SDM function (sdm.fun).
+#' @param formula Formula for the SDMs, which serves as input for the given SDM. Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can be provided with index names corresponding to species. In this case, species will be fit using their corresponding formula.
+#' @param data Full environmental data used for fitting.
+#' @param obs Species observations as a data.frame, with a column for species name (must be labelled 'species') and column of index of observations to reflect presences. If the index column name is not found in 'data', it assumes row number.
+#' @param surv Survey data, given as a data.frame of row/index as the first column for the data following the same name as obs, and each column representing a given species presence (1) or absence (0). It will add the an additional binary predictor to the formula(s), "so", which denotes sightings-only or not. If 'so' is already in formula (e.g. if modifying the variable in any way, then set surv.formula = FALSE). If left as NA, it will fit the SDMs as presence-only models with the function of choice. NOTE: Assumes all species are provided in the survey data, and that they are surveyed over the same sites (i.e. matrix-type).
+#' @param background Background sites (pseudo-absences) used to fit the presence-only model, provided as a vector of indices of data (following the same column name as observations). If the index column name is not found in 'data', it assumes row number within 'data'. If left as NA, it will randomly sample 'nbackground' sites, with or without overlap ('overlapbackground'). Currently, only one set of background sites can be used.
+#' @param sdm.fun Model (as function) used for fitting (the default is gam with mgcv). The function must have the formula as their first argument, and 'data' as the parameter for the dataset (including presences and background sites within the data.frame). A wrapper function for maxnet::maxnet() is also available as s2bak.maxnet().
+#' @param overlapbackground Whether sampled background sites that overlap with observations should be included. By default, it allows overlap. If FALSE, number of background sites may be less than specified or provided.
+#' @param nbackground Number of background sites to sample. Only applies if background = FALSE.
+#' @param surv.formula Whether the binary variable 'so', denoting whether sites are sightings-only or survey, should be added to the formula(s). If survey data is not provided, then 'so' will not be added to the formula(s) regardless of whether it is TRUE or FALSE. If there is survey data and surv.formula = FALSE, then 'so' will not be added, and must be included in the initial function call (or it will throw an error).
+#' @param ncores Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.
+#' @param verbose Prints statements of species being fit as we go.
+#' @param readout Directory to save fitted SDMs and background sites. If NA, it will not save any SDMs. Provides an additional output that shows where the SDM is saved (with file name). The output in this directory can later be used in other functions such as s2bak.predict.SOS2.
+#' @param version Whether the SDMs should be included in the output. With "short", no the fitted SDMs are not provided. Setting to "full" (default) will output the list with all SDMs. Setting to "short" and combined with readout, can considerably reduce RAM usage while saving the progress so far, which is useful when dealing with many species or large datasets.
+#' @param ... Other arguments that are passed to the SDM function (sdm.fun).
 #' @return A list of fitted SDMs for each species.
 #' @rdname s2bak
 #' @export
@@ -259,12 +259,13 @@ s2bak.SO = function(formula, data, obs, background = NA,
 #'
 #' NOTE: ASSUMES PREDICTIONS, ENVIRONMENTAL DATA AND SURVEY DATA ROWS ALIGN. MAYBE MAKE FORMAT IT ALIGN WITH s2bak.fit() (that is, allow for indexing).
 #'
-#' @param predictions = Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species
-#' @param surv = Survey data as a matrix, with rows corresponding to environmental data rows.
-#' @param data = Survey environmental data. Assumes all columns correspond to relevant environmental data and match with predictions/survey data.
-#' @param trait = Full trait data, as a data.frame with 'species' as a column and relevant traits for the rest of them. Do not necessarily have to be involved in the survey, but will be used in the final adjustment model as final output.
-#' @param verbose = Make print statements
+#' @param predictions Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species
+#' @param surv Survey data as a matrix, with rows corresponding to environmental data rows.
+#' @param data Survey environmental data. Assumes all columns correspond to relevant environmental data and match with predictions/survey data.
+#' @param trait Full trait data, as a data.frame with 'species' as a column and relevant traits for the rest of them. Do not necessarily have to be involved in the survey, but will be used in the final adjustment model as final output.
+#' @param verbose Make print statements
 #' @return Bias adjustment models, the kernels (location and species), as a second-order GLM.
+#' @rdname s2bak
 #' @export
 s2bak.BaK = function(predictions, surv, data, trait, verbose = FALSE){
 
@@ -364,7 +365,6 @@ s2bak.BaK = function(predictions, surv, data, trait, verbose = FALSE){
   # Fit bias adjustment model
   out$bak$bias_adj = glm(pa~zso_only+scale_so_sp+scale_so_l, family="binomial", data=fit_adj)
 
-
   return(out)
 }
 
@@ -375,8 +375,8 @@ s2bak.BaK = function(predictions, surv, data, trait, verbose = FALSE){
 #' Fits SO models for all species, S2 models for species with survey data. [Combine with S2 and SO, note that we include predict.fun, traite and force surv as a mandatory input]
 #' Right now, assumes that all columns/variables in 'data' are relevant for the location bias model (minus the index or whatever).
 #'
-#' @param ... = Same as above, with "..." for the fitting of SO and S2
 #' @return An S2BaK class object containing S2, SO and BaK.
+#' @rdname s2bak
 #' @export
 s2bak.S2BaK = function(formula, data, obs, surv, trait,
                     background = NA, sdm.fun = gam, predict.fun = predict.gam, overlapbackground = TRUE, nbackground = 10000,
@@ -433,9 +433,9 @@ s2bak.S2BaK = function(formula, data, obs, surv, trait,
 #'
 #' It is possible to only provide SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
 #'
-#' @param SO = output from s2bak.SO or s2bak.S2 without survey data.
-#' @param S2 = output from s2bak.S2 function
-#' @param BaK = output from s2back.BaK function
+#' @param SO output from s2bak.SO or s2bak.S2 without survey data.
+#' @param S2 output from s2bak.S2 function
+#' @param BaK output from s2back.BaK function
 #' @return Object of class s2bak.S2Bak, equivalent to having run s2bak.S2BaK() for the entire dataset
 #' @export
 s2bak.combine = function(SO = NULL, S2 = NULL, BaK = NULL){
@@ -450,11 +450,12 @@ s2bak.combine = function(SO = NULL, S2 = NULL, BaK = NULL){
 #'
 #' Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.
 #'
-#' @param predictions = Sightings-only predictions as a matrix or data.frame with rows as sites and columns as species. Assumes as type="response", and rows of data.frame correspond to newdata rows.
-#' @param bak = Output from s2bak.BaK(), with fitted BaK model
-#' @param data = Environmental data, with rows corresponding to rows of predictions
-#' @param trait = Trait data, with column 'species' matching those in predictions.
+#' @param predictions Sightings-only predictions as a matrix or data.frame with rows as sites and columns as species. Assumes as type="response", and rows of data.frame correspond to newdata rows.
+#' @param bak Output from s2bak.BaK(), with fitted BaK model
+#' @param data Environmental data, with rows corresponding to rows of predictions
+#' @param trait Trait data, with column 'species' matching those in predictions.
 #' @return Model predictions but with adjustments made by the BaK model. Note the default right now is type="response"
+#' @rdname s2bak.predict
 #' @export
 s2bak.predict.BaK = function(predictions, bak, trait, data){
   predictions = as.matrix(predictions)
@@ -484,15 +485,17 @@ s2bak.predict.BaK = function(predictions, bak, trait, data){
 #' 
 #' It should automatically detect which model we have based on output. Can provide either output from s2bak.S2 or s2bak.SO.
 #' 
-#' @param model = Fitted models to use for prediction. If the object does not have stored SDMs, it will check to see if there is readout (alternatively, you could force readout with doReadout = T).
-#' @param newdata = A data.frame containing the values . All variables needed for prediction should be included.
-#' @param predict.fun = Predict function linked to the SDM used. The default used is predict.gam from the mgcv package. Functions have the structure of model and newdata as the first and second arguments, respectively.
-#' @param class = Whether we're dealing with SO or S2 models, which is only used when providing a directory so we can identify which class we are interested in.
-#' @param doReadout = logical; if TRUE will do readout over stored SDMs. If there are no SDMs then it will automatically check for readout
-#' @param verbose = If true, provide messages as we go.
-#' @param ncores = Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.
+#' @param model Fitted SO or S2 models to use for prediction. If the object does not have stored SDMs, it will check to see if there is readout (alternatively, you could force readout with doReadout = T).
+#' @param newdata A data.frame containing the values . All variables needed for prediction should be included.
+#' @param predict.fun Predict function linked to the SDM used. The default used is predict.gam from the mgcv package. Functions have the structure of model and newdata as the first and second arguments, respectively.
+#' @param class Whether we're dealing with SO or S2 models, which is only used when providing a directory so we can identify which class we are interested in.
+#' @param doReadout logical; if TRUE will do readout over stored SDMs. If there are no SDMs then it will automatically check for readout
+#' @param verbose If true, provide messages as we go.
+#' @param ncores Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.
 #' @param ... = Additional arguments passed into function for prediction (predict.fun).
 #' @return Generates a matrix of predictions with rows being indices in the data.frame, and columns representing each species.
+#' @rdname s2bak.predict
+#' @export
 s2bak.predict.SOS2 = function(model, newdata, predict.fun = predict.gam, doReadout = FALSE, verbose = FALSE, ncores = 1, ...){
   
   if(verbose) cat("Predicting of class", class(model), "\n")
@@ -583,8 +586,9 @@ s2bak.predict.SOS2 = function(model, newdata, predict.fun = predict.gam, doReado
 #' @param doReadout = Whether to force doReadout in SOS2
 #' @param verbose = add print statements
 #' @param ncores = Paralellise SO/S2 predictions, if NA then auto-pick it
-#' @param ... = Any inputs for the predict.fun
+#' @param ... = Any additional arguments for the predict.fun
 #' @return Model predictions as a data.frame with columns for each species and rows for each location
+#' @rdname s2bak.predict
 #' @export
 s2bak.predict = function(model, newdata, trait = NA, predict.fun = predict.gam, verbose = FALSE, ncores = 1, doReadout = FALSE, ...){
   # Simplest cases, which require a call to s2bak.predict.SOS2

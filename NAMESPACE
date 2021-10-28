@@ -9,6 +9,7 @@ export(s2bak.combine)
 export(s2bak.maxnet)
 export(s2bak.predict)
 export(s2bak.predict.BaK)
+export(s2bak.predict.SOS2)
 export(s2bak.scale)
 export(s2bak.truncate)
 

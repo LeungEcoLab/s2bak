@@ -1,4 +1,6 @@
-#' Truncate values based on min and max input
+#' @title Truncate values based on min and max input
+#'
+#' @description Truncate provided numerical values based on a defined minimum and maximum cutoff.
 #'
 #' @param x Numerical values to truncate
 #' @param min Minimum value to truncate, where \code{x <= min} with be \code{min}. If left as NA it will use the minimum value of x.
@@ -17,7 +19,7 @@ s2bak.truncate = function(x, min = NA, max = NA){
 
 #' @title Add predictor to the formula.
 #' 
-#' Adds 'so' (or other specified predictor) to the formula as an additional predictor. Assumes formula follows a "Y ~ X" format. Does not add 'pred' if it is already in the formula.
+#' @description Adds 'so' (or other specified predictor) to the formula as an additional predictor. The arugment 'formula' assumes the formula follows a "Y ~ X" format. The functino will not add the predictor if it is already in the formula.
 #'
 #' @param formula Formula or list of formulas to add 'pred' to
 #' @param pred Predictor name to add to formula
@@ -55,7 +57,7 @@ s2bak.addPred = function(formula, pred = "so"){
 
 #' @title Modified maxnet function for s2bak
 #'
-#' Wrapper function for maxnet's maxnet function. Converts the arguments for maxnet to the necessary structure for fitting an SDM (an 'S3'-like approach)
+#' @description Wrapper function for maxnet::maxnet function. The function converts the arguments for maxnet to the necessary structure for fitting an SDM within S2BaK, where the first and second arguments are the formula and dataset, respectively.
 #'
 #' @param formula Formula for fitting the maxnet model
 #' @param data Fitting dataset including response variable
@@ -71,7 +73,9 @@ s2bak.maxnet = function(formula, data, ...){
   return(maxnet(p, data, f = formula, ...))
 }
 
-#' @title Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
+#' @title Scale continuous values within data.frame.
+#'
+#' @descriptions Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
 #'
 #' @param data Values to scale, with column names indicating the variable
 #' @param project Projected values to scale, using the mean and standard deviations of 'env'. If NA, then the function will only scale the environmental values provided

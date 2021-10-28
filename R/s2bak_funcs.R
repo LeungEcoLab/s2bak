@@ -1,7 +1,7 @@
 #' @name s2bak
 #' @title Build sightings-only or S2 species distribution models for multiple species.
 #' 
-#' s2bak.SO function fits SDMs for each provided species within the same system, using a specified SDM approach (or the default which are GAMs from the mgcv package). Parallelisation is possible when processing each SDM, with the default being 1 core.
+#' @description s2bak.SO function fits SDMs for each provided species within the same system, using a specified SDM approach (or the default which are GAMs from the mgcv package). Parallelisation is possible when processing each SDM, with the default being 1 core.
 #'
 #' The s2bak.S2 function fits SDMs using species sightings, background sites and survey sites, differentiating between them using a binary 'so' predictor, denoting sightings-only (1) or survey (0).
 #' 
@@ -21,7 +21,7 @@
 #' @param readout Directory to save fitted SDMs and background sites. If NA, it will not save any SDMs. Provides an additional output that shows where the SDM is saved (with file name). The output in this directory can later be used in other functions such as s2bak.predict.SOS2.
 #' @param version Whether the SDMs should be included in the output. With "short", no the fitted SDMs are not provided. Setting to "full" (default) will output the list with all SDMs. Setting to "short" and combined with readout, can considerably reduce RAM usage while saving the progress so far, which is useful when dealing with many species or large datasets.
 #' @param ... Other arguments that are passed to the SDM function (sdm.fun).
-#' @return A list of fitted SDMs for each species.
+#' @return An object of class "s2bak.S2", providing fitted SDMs for each species based on the provided SDM modelling approach. The primary difference between SO and S2 models are the additional data points from the survey data, and an additional binary predictor 'so' which denotes whether the data is from presence-background (1) or presence-absence data (0).
 #' @rdname s2bak
 #' @export
 s2bak.S2 = function(formula, data, obs, surv = NA, background = NA,
@@ -237,10 +237,7 @@ s2bak.S2 = function(formula, data, obs, surv = NA, background = NA,
   return(l)
 }
 
-#' Build sightings-only (SO) model, which calls s2bak.S2() but without survey sites. Has functionality for parallelisation, but the default is 1 core.
-#'
 #' @rdname s2bak
-#' @return SO class model
 #' @export
 s2bak.SO = function(formula, data, obs, background = NA,
                     sdm.fun = gam, overlapbackground = TRUE, nbackground = 10000,
@@ -253,17 +250,17 @@ s2bak.SO = function(formula, data, obs, background = NA,
                     readout = readout, version = version, ...))
 }
 
-#' @title Build bias adjustment kernel (BaK) for a fitted sightings-only SDM.
+#' @title Generate bias adjustment kernel (BaK) for a fitted sightings-only SDM.
 #'
-#' [DESC].
+#' @description Builds bias adjustment kernel (BaK) for a fitted sightings-only SDM. Provides three models, as generalized linear models (GLMs): modelling location bias, modelling species bias and an adjustment model that combines model predictions with the output from the other two models.
 #'
-#' NOTE: ASSUMES PREDICTIONS, ENVIRONMENTAL DATA AND SURVEY DATA ROWS ALIGN. MAYBE MAKE FORMAT IT ALIGN WITH s2bak.fit() (that is, allow for indexing).
+#' The dataset assumes the rows for the predictions, survey and data arguments all align and match.
 #'
-#' @param predictions Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species
-#' @param surv Survey data as a matrix, with rows corresponding to environmental data rows.
-#' @param data Survey environmental data. Assumes all columns correspond to relevant environmental data and match with predictions/survey data.
-#' @param trait Full trait data, as a data.frame with 'species' as a column and relevant traits for the rest of them. Do not necessarily have to be involved in the survey, but will be used in the final adjustment model as final output.
-#' @param verbose Make print statements
+#' @param predictions Sightings-only (SO) model predictions over the survey sites for all species, beyond those found in the survey data, as a matrix with columns for each species and rows for each site.
+#' @param surv Survey data as a matrix, with rows corresponding to each site.
+#' @param data Survey environmental data with columns for environmental data and rows for each site. Assumes all columns correspond to relevant environmental data and match with predictions/survey data. Also assumes that inputted columns are all relevant in modelling location bias.
+#' @param trait Full trait data for the species predictions, as a data.frame with 'species' as a column and relevant traits for the remainder. Like with the predictions, the species in the dataset do not necessarily have to possess survey data, but will be used in the final adjustment model as final output.
+#' @param verbose Prints statements of species being fit as we go.
 #' @return Bias adjustment models, the kernels (location and species), as a second-order GLM.
 #' @rdname s2bak
 #' @export
@@ -370,10 +367,11 @@ s2bak.BaK = function(predictions, surv, data, trait, verbose = FALSE){
 
 #'  @title Fit entire S2Bak model
 #'
-#' Build S2BaK from top to bottom. Has functionality for parallelisation, but the default is 1 core.
+#' @description Build S2BaK from top to bottom. Has functionality for parallelisation, but the default is 1 core.
 #'
-#' Fits SO models for all species, S2 models for species with survey data. [Combine with S2 and SO, note that we include predict.fun, traite and force surv as a mandatory input]
-#' Right now, assumes that all columns/variables in 'data' are relevant for the location bias model (minus the index or whatever).
+#' Fits SO models for all species, S2 models for species with survey data and a BaK model for adjusted predictions.
+#'
+#' Assumes that all columns/variables in 'data' are relevant for the location bias model.
 #'
 #' @return An S2BaK class object containing S2, SO and BaK.
 #' @rdname s2bak
@@ -427,11 +425,11 @@ s2bak.S2BaK = function(formula, data, obs, surv, trait,
   return(out)
 }
 
-#' Combine separately fitted SO, S2 and BaK models into a single S2BaK object
+#' @title Combine SO, S2 and BaK objects
 #'
-#' Assuming everything was done correctly in the previous, the output should mimic an S2BaK function
+#' @description Combines separately fitted SO, S2 and BaK models into a single S2BaK object. The output will be identical to running the entire process in s2bak.S2BaK function, and can be used in the same situations.
 #'
-#' It is possible to only provide SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
+#' Models can be partially provided, for instance only SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
 #'
 #' @param SO output from s2bak.SO or s2bak.S2 without survey data.
 #' @param S2 output from s2bak.S2 function
@@ -448,7 +446,7 @@ s2bak.combine = function(SO = NULL, S2 = NULL, BaK = NULL){
 
 #' @title Adjust SO model predictions using BaK
 #'
-#' Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.
+#' @description Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.
 #'
 #' @param predictions Sightings-only predictions as a matrix or data.frame with rows as sites and columns as species. Assumes as type="response", and rows of data.frame correspond to newdata rows.
 #' @param bak Output from s2bak.BaK(), with fitted BaK model
@@ -483,16 +481,16 @@ s2bak.predict.BaK = function(predictions, bak, trait, data){
 
 #' @title Make predictions using fitted SO, S2, BaK or S2BaK class models
 #' 
-#' It should automatically detect which model we have based on output. Can provide either output from s2bak.S2 or s2bak.SO.
+#' @description The function automatically detects which model class is used, which can be either the output from s2bak.S2 or s2bak.SO.
 #' 
 #' @param model Fitted SO or S2 models to use for prediction. If the object does not have stored SDMs, it will check to see if there is readout (alternatively, you could force readout with doReadout = T).
 #' @param newdata A data.frame containing the values . All variables needed for prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used is predict.gam from the mgcv package. Functions have the structure of model and newdata as the first and second arguments, respectively.
 #' @param class Whether we're dealing with SO or S2 models, which is only used when providing a directory so we can identify which class we are interested in.
 #' @param doReadout logical; if TRUE will do readout over stored SDMs. If there are no SDMs then it will automatically check for readout
-#' @param verbose If true, provide messages as we go.
+#' @param verbose Prints statements of species being fit as we go.
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be automatically set if ncores=NA. If ncores > number of available cores - 1, set to the latter.
-#' @param ... = Additional arguments passed into function for prediction (predict.fun).
+#' @param ... Additional arguments passed into function for prediction (predict.fun).
 #' @return Generates a matrix of predictions with rows being indices in the data.frame, and columns representing each species.
 #' @rdname s2bak.predict
 #' @export
@@ -575,18 +573,18 @@ s2bak.predict.SOS2 = function(model, newdata, predict.fun = predict.gam, doReado
 
 #' @title Predict with S2BaK objects
 #'
-#' Wrapper function that detects the class of the inputed model and makes the appropriate prediction.
+#' @description Wrapper function that detects the class of the inputed model and makes the appropriate prediction.
 #'
-#' If S2 or SO, will make prediction using s2bak.predict.SOS2. If given SO+BaK (that is, an S2BaK class model with S2 = NULL, for example through combine without S2), will make prediction and adjustment which requires trait data for the relevant species. If the full S2BaK model, will make predictions for species in S2, and SO+BaK for the remainder
+#' If the provided model is s2bak.S2 or s2bak.SO, predictions will be made using s2bak.predict.SOS2. If an SO model with BaK is provided (that is, an S2BaK class model with S2 = NULL, for example through combine without a provided S2), the functions returns adjusted predictions requiring trait data for the species. If the full S2BaK model (SO, S2 and BaK are provided), the function will make predictions with S2 for species with sightings and survey data, and adjusted predictions using SO and BaK for species without survey data.
 #'
-#' @param model = Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or s2bak.combine.
-#' @param newdata = Data to predict
-#' @param trait = Trait data, optional if model is S2 or SO
-#' @param predict.fun = prediction function for SDM (for S2 and SO)
-#' @param doReadout = Whether to force doReadout in SOS2
-#' @param verbose = add print statements
-#' @param ncores = Paralellise SO/S2 predictions, if NA then auto-pick it
-#' @param ... = Any additional arguments for the predict.fun
+#' @param model Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or s2bak.combine.
+#' @param newdata Environmental data to predict
+#' @param trait Trait data, optional if model is S2 or SO
+#' @param predict.fun prediction function for SDM (for S2 and SO)
+#' @param doReadout Whether to force doReadout in SOS2
+#' @param verbose Add print statements
+#' @param ncores Paralellise SO/S2 predictions, if NA then auto-pick it
+#' @param ... Any additional arguments for the predict.fun
 #' @return Model predictions as a data.frame with columns for each species and rows for each location
 #' @rdname s2bak.predict
 #' @export

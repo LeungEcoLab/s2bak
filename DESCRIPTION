@@ -1,0 +1,14 @@
+Package: s2bak
+Title: Fit species distribution models using the S2BaK framework.
+Version: 0.0.0.1
+Authors@R: 
+    person("Dat", "Nguyen", , "dat.nguyen@mail.mcgill.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports: reshape2, foreach, doParallel, maxnet, mgcv

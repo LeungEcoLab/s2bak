@@ -1,12 +1,12 @@
-# Sightings, Survey and Bias-adjustment Kernel (S2BaK)
+# `s2bak` R package
 
 >Framework and initial code created by Brian Leung, with code adapted for package by Dat Nguyen and Brian Leung.
 
 **THIS PACKAGE IS CURRENTLY UNSTABLE AND A WORK IN PROGRESS. USE AT YOUR OWN RISK.**
 
-This R package adapts the code used for the S2BaK framework within Leung et al., 2019, a flexible and integrative bias-adjustment model that may be used with many species distribution models.
+This R package adapts the code used for the Sightings, Survey and Bias-adjustment Kernel (S2BaK) framework within Leung et al., 2019, a flexible, efficient and integrative bias-adjustment model to fit species distribution models (SDMs) for multiple species.
 
->[OVERALL DESCRIPTION OF S2BaK MODEL].
+>[OVERALL DESCRIPTION OF S2BaK MODEL: HOW IT WORKS]. [WHAT KIND OF DATA IS NEEDED]. [FLEXIBLE FOR ANY MODELLING METHOD].
 
 ## Installation
 
@@ -24,6 +24,8 @@ library(s2bak)
 > TECHNICAL INFORMATION A WORK IN PROGRESS
 
 >[The functions provided in the package allow the user to apply the s2bak framework to their data using their modelling method of choice].
+
+>[Data structure for fitting model]. [A provided function can generated for demonstration purposes].
 
 >[The package allows parallelization, etc.]
 

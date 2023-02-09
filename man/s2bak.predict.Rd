@@ -48,7 +48,7 @@ s2bak.predict(
 
 \item{verbose}{Add print statements}
 
-\item{ncores}{Paralellise SO/S2 predictions, if NA then auto-pick it}
+\item{ncores}{Paralellize SO/S2 predictions, if NA then auto-pick it}
 
 \item{...}{Any additional arguments for the predict.fun}
 

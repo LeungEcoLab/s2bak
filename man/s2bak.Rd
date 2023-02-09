@@ -72,7 +72,7 @@ s2bak.S2BaK(
 
 \item{background}{Background sites (pseudo-absences) used to fit the presence-only model, provided as a vector of indices of data (following the same column name as observations). If the index column name is not found in 'data', it assumes row number within 'data'. If left as NA, it will randomly sample 'nbackground' sites, with or without overlap ('overlapbackground'). Currently, only one set of background sites can be used.}
 
-\item{sdm.fun}{Model (as function) used for fitting (the default is gam with mgcv). The function must have the formula as their first argument, and 'data' as the parameter for the dataset (including presences and background sites within the data.frame). A wrapper function for maxnet::maxnet() is also available as s2bak.maxnet().}
+\item{sdm.fun}{Model (as function) used for fitting (the default is gam using the mgcv package). The function must have the formula as their first argument, and 'data' as the parameter for the dataset (including presences and background sites within the data.frame). A wrapper function for maxnet::maxnet() is also available as s2bak.maxnet().}
 
 \item{overlapbackground}{Whether sampled background sites that overlap with observations should be included. By default, it allows overlap. If FALSE, number of background sites may be less than specified or provided.}
 
@@ -112,7 +112,7 @@ Builds bias adjustment kernel (BaK) for a fitted sightings-only SDM. Provides th
 
 The dataset assumes the rows for the predictions, survey and data arguments all align and match.
 
-Build S2BaK from top to bottom. Has functionality for parallelisation, but the default is 1 core.
+Build S2BaK from top to bottom. Has functionality for parallelization, but the default is 1 core.
 
 Fits SO models for all species, S2 models for species with survey data and a BaK model for adjusted predictions.
 

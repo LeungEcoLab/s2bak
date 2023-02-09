@@ -17,5 +17,5 @@ s2bak.scale(data, project = NA, getScaleValues = FALSE)
 Returns a data.frame of scaled columns for non-categorical and non-binary variables. If getScaleValues or project data is provided, returns as a list.
 }
 \description{
-Scale continuous values within data.frame.
+Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
 }

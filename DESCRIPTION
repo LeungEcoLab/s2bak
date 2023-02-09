@@ -10,7 +10,7 @@ Authors@R: c(
     person(given = "Brian",
            family = "Leung",
            email = "brian.leung2@mcgill.ca",
-           role = c("aut", "cre"))
+           role = c("aut"))
     )
 Description: Fit species distribution models (SDMs) for multiple species using S2BaK, and predict species distributions using the models.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a

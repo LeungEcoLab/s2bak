@@ -35,3 +35,7 @@ a list with a data.frame of the environment for each site, a data.frame of speci
 \description{
 This function simulates the data needed for fitting SDMs for multiple species including generated trait and environments. The function is to primarily to illustrate the data structure, as well as demonstration of the provided functions.
 }
+\examples{
+## See ?s2bak
+
+}

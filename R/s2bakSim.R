@@ -9,6 +9,10 @@
 #' @param env.prob numeric vector of size two for the range of probabilities for establishment given environment
 #' @param trait.prob numeric vector for the range of probabilities for establishment given species trait
 #' @param max.iter numeric. Number of attempts to generate a given species if the number of presences is less than the minimum.
+#' 
+#' @examples
+#' ## See ?s2bak
+#' 
 #' @return a list with a data.frame of the environment for each site, a data.frame of species traits, a data.frame of species sightings, and the survey data as a matrix.
 #' @export
 s2bakSim <- function(species = 30, sites = 3000, surv = 300,

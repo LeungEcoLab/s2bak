@@ -1,6 +1,6 @@
 #' @title Truncate values based on min and max input
 #'
-#' @description Truncate provided numerical values based on a defined minimum and maximum cutoff.
+#' @description Truncate provided numerical values based on a defined minimum and maximum cutoff. Used in \link[s2bak]{s2bak.BaK} and \link[s2bak]{s2bak.predict.BaK}.
 #'
 #' @param x Numerical values to truncate
 #' @param min Minimum value to truncate, where \code{x <= min} with be \code{min}. If left as NA it will use the minimum value of x.

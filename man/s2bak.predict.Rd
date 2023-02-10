@@ -30,15 +30,19 @@ s2bak.predict(
 )
 }
 \arguments{
-\item{predictions}{Sightings-only predictions as a matrix or data.frame with rows as sites and columns as species. Assumes as type="response", and rows of data.frame correspond to newdata rows.}
+\item{predictions}{Sightings-only predictions as a matrix or data.frame with
+rows as sites and columns as species. Assumes as type="response", and rows of
+data.frame correspond to newdata rows.}
 
 \item{bak}{Output from s2bak.BaK(), with fitted BaK model}
 
 \item{trait}{Trait data, optional if model is S2 or SO}
 
-\item{data}{Environmental data, with rows corresponding to rows of predictions}
+\item{data}{Environmental data, with rows corresponding to rows of
+predictions}
 
-\item{model}{Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or s2bak.combine.}
+\item{model}{Outputted model from s2bak.SO, s2bak.S2, s2bak.S2BaK or
+s2bak.combine.}
 
 \item{newdata}{Environmental data to predict}
 
@@ -52,21 +56,36 @@ s2bak.predict(
 
 \item{...}{Any additional arguments for the predict.fun}
 
-\item{class}{Whether we're dealing with SO or S2 models, which is only used when providing a directory so we can identify which class we are interested in.}
+\item{class}{Whether we're dealing with SO or S2 models, which is only used
+when providing a directory so we can identify which class
+we are interested in.}
 }
 \value{
-Model predictions but with adjustments made by the BaK model. Note the default right now is type="response"
+Model predictions but with adjustments made by the BaK model.
+Note the default right now is type="response"
 
-Generates a matrix of predictions with rows being indices in the data.frame, and columns representing each species.
+Generates a matrix of predictions with rows being indices in the
+data.frame, and columns representing each species.
 
-Model predictions as a data.frame with columns for each species and rows for each location
+Model predictions as a data.frame with columns for each species and
+rows for each location
 }
 \description{
-Make model adjustments using the output from the BaK output, requiring trait, environmental data and SO predictions.
+Make model adjustments using the output from the BaK output,
+requiring trait, environmental data and SO predictions.
 
-The function automatically detects which model class is used, which can be either the output from s2bak.S2 or s2bak.SO.
+The function automatically detects which model class is used,
+which can be either the output from s2bak.S2 or s2bak.SO.
 
-Wrapper function that detects the class of the inputed model and makes the appropriate prediction.
+Wrapper function that detects the class of the inputed model
+and makes the appropriate prediction.
 
-If the provided model is s2bak.S2 or s2bak.SO, predictions will be made using s2bak.predict.SOS2. If an SO model with BaK is provided (that is, an S2BaK class model with S2 = NULL, for example through combine without a provided S2), the functions returns adjusted predictions requiring trait data for the species. If the full S2BaK model (SO, S2 and BaK are provided), the function will make predictions with S2 for species with sightings and survey data, and adjusted predictions using SO and BaK for species without survey data.
+If the provided model is s2bak.S2 or s2bak.SO, predictions will be made
+using s2bak.predict.SOS2. If an SO model with BaK is provided (that is, an
+S2BaK class model with S2 = NULL, for example through combine without a
+provided S2), the functions returns adjusted predictions requiring trait
+data for the species. If the full S2BaK model (SO, S2 and BaK are provided),
+the function will make predictions with S2 for species with sightings and
+survey data, and adjusted predictions using SO and BaK for species
+without survey data.
 }

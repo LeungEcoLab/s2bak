@@ -15,5 +15,8 @@ s2bak.addPred(formula, pred = "so")
 A formula with added predictor
 }
 \description{
-Adds 'so' (or other specified predictor) to the formula as an additional predictor. The arugment 'formula' assumes the formula follows a "Y ~ X" format. The functino will not add the predictor if it is already in the formula.
+Adds 'so' (or other specified predictor) to the formula as an
+additional predictor. The arugment 'formula' assumes the formula follows a
+"Y ~ X" format. The functino will not add the predictor if it is already
+in the formula.
 }

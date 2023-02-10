@@ -15,5 +15,8 @@ s2bak.maxnet(formula, data, ...)
 Output of the maxnet model
 }
 \description{
-Wrapper function for maxnet::maxnet function. The function converts the arguments for maxnet to the necessary structure for fitting an SDM within S2BaK, where the first and second arguments are the formula and dataset, respectively.
+Wrapper function for maxnet::maxnet function. The function
+converts the arguments for maxnet to the necessary structure for fitting an
+SDM within S2BaK, where the first and second arguments are the formula and
+dataset, respectively.
 }

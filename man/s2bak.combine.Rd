@@ -14,10 +14,15 @@ s2bak.combine(SO = NULL, S2 = NULL, BaK = NULL)
 \item{BaK}{output from s2back.BaK function}
 }
 \value{
-Object of class s2bak.S2Bak, equivalent to having run s2bak.S2BaK() for the entire dataset
+Object of class s2bak.S2Bak, equivalent to having run
+\link[s2bak]{s2bak.S2BaK} for the entire dataset
 }
 \description{
-Combines separately fitted SO, S2 and BaK models into a single S2BaK object. The output will be identical to running the entire process in s2bak.S2BaK function, and can be used in the same situations.
+Combines separately fitted SO, S2 and BaK models into a single
+S2BaK object. The output will be identical to running the entire process in
+s2bak.S2BaK function, and can be used in the same situations.
 
-Models can be partially provided, for instance only SO and BaK, in which case the use of s2bak predict functions will not apply S2 but instead only run predictions with sightings-only and BaK adjustment.
+Models can be partially provided, for instance only SO and BaK, in which case
+the use of s2bak predict functions will not apply S2 but instead only run
+predictions with sightings-only and BaK adjustment.
 }

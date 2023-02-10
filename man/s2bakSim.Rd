@@ -21,19 +21,29 @@ s2bakSim(
 
 \item{surv}{numeric. The number of survey sites}
 
-\item{minimum.sightings}{numeric. The function will re-generate a new species until the minimum number of sightings (and survey presences) exceeds the provided value.}
+\item{minimum.sightings}{numeric. The function will re-generate a new species
+until the minimum number of sightings (and survey presences) is greater
+than or equal to the provided value.}
 
-\item{env.prob}{numeric vector of size two for the range of probabilities for establishment given environment}
+\item{env.prob}{numeric vector of size two for the range of probabilities for
+establishment given environment}
 
-\item{trait.prob}{numeric vector for the range of probabilities for establishment given species trait}
+\item{trait.prob}{numeric vector for the range of probabilities for
+establishment given species trait}
 
-\item{max.iter}{numeric. Number of attempts to generate a given species if the number of presences is less than the minimum.}
+\item{max.iter}{numeric. Number of attempts to generate a given species if
+the number of presences is less than the minimum.}
 }
 \value{
-a list with a data.frame of the environment for each site, a data.frame of species traits, a data.frame of species sightings, and the survey data as a matrix.
+a list with a data.frame of the environment for each site, a
+data.frame of species traits, a data.frame of species sightings, and
+the survey data as a matrix.
 }
 \description{
-This function simulates the data needed for fitting SDMs for multiple species including generated trait and environments. The function is to primarily to illustrate the data structure, as well as demonstration of the provided functions.
+This function simulates the data needed for fitting SDMs for
+multiple species including generated trait and environments. The function is
+to primarily to illustrate the data structure, as well as demonstration
+of the provided functions.
 }
 \examples{
 ## See ?s2bak

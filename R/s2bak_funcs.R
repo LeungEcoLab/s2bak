@@ -40,7 +40,7 @@
 #' 'data', it assumes row number within 'data'. If left as NA, it will randomly
 #' sample 'nbackground' sites, with or without overlap ('overlapbackground').
 #' Currently, only one set of background sites can be used.
-#' @param sdm.fun Model (as function) used for fitting (the default is 
+#' @param sdm.fun Model (as function) used for fitting (the default is
 #' \link[mgcv]{gam} from the mgcv package). The function must have the formula
 #' as their first argument, and 'data' as the parameter for the dataset
 #' (including presences and background sites within the data.frame).
@@ -87,7 +87,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
     NC <- max(detectCores() - 1, 1)
-    options(cores = min(NC, ncores, na.rm = T))
+    options(cores = min(NC, ncores, na.rm = TRUE))
   } else {
     stop("Invalid number of cores.")
   }
@@ -194,7 +194,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   # Saves output of each one as well
   if (verbose) cat("Fitting SDMs\n")
   l$sdm <- foreach(i = specieslist) %dopar% {
-    if (verbose){
+    if (verbose) {
       cat("\t", i, "-",
             nrow(obs[obs$species == i, ]),
             "occurrences\n")
@@ -205,7 +205,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       background <- background[!(background %in% obs[obs$species == i, which(colnames(obs) != "species")])]
     }
     # Get the list of indices
-    ind2 <- c(obs[obs$species == i, which(colnames(obs) != "species")], 
+    ind2 <- c(obs[obs$species == i, which(colnames(obs) != "species")],
               background)
     # Row number
     if (is.na(ind)) {
@@ -341,7 +341,7 @@ s2bak.SO <- function(formula, data, obs, background = NA,
 #' and rows for each site. Assumes all columns correspond to relevant
 #' environmental data and match with predictions/survey data. Also assumes
 #' that inputted columns are all relevant in modelling location bias.
-#' @param trait Full trait data for the species predictions, as a data.frame 
+#' @param trait Full trait data for the species predictions, as a data.frame
 #' with 'species' as a column and relevant traits for the remainder.
 #' Like with the predictions, the species in the dataset do not necessarily
 #' have to possess survey data, but will be used in the final adjustment model
@@ -361,13 +361,13 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
   specieslist <- colnames(surv)
 
   # Model outputs
-  out <- list(    
+  out <- list(
     species = specieslist,
     fullspecies = unique(trait$species)
   )
   class(out) <- "s2bak.BaK"
 
-  if (verbose){
+  if (verbose) {
     cat("Fitting bias adjustment kernel on", length(specieslist),
     "survey species and", length(out$fullspecies), "species total.\n")
   }
@@ -398,7 +398,7 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
   names(msd) <- tn
   for (vv in tn) {
     if (numer_tr[vv]) {
-      msd[vv] <- mean(trait[, vv], na.rm = T)
+      msd[vv] <- mean(trait[, vv], na.rm = TRUE)
     } else {
       msd[vv] <- 0
     }
@@ -407,9 +407,9 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
   # Location biases, based on environment
   fit_l <- data
   # Get summed predictions
-  fit_l$so_only <- apply(predictions, 1, sum, na.rm = T)
+  fit_l$so_only <- apply(predictions, 1, sum, na.rm = TRUE)
   # Get summed occurrences
-  fit_l$pa <- apply(surv, 1, sum, na.rm = T)
+  fit_l$pa <- apply(surv, 1, sum, na.rm = TRUE)
   # Get log-ratio
   fit_l$lr <- log((fit_l$pa + 1) / (fit_l$so_only + 1))
 
@@ -427,9 +427,9 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
     }
   }
   # Get summed predictions
-  fit_sp$so_only <- apply(predictions[, specieslist], 2, sum, na.rm = T)
+  fit_sp$so_only <- apply(predictions[, specieslist], 2, sum, na.rm = TRUE)
   # Get summed occurrences
-  fit_sp$pa <- apply(surv[, specieslist], 2, sum, na.rm = T)
+  fit_sp$pa <- apply(surv[, specieslist], 2, sum, na.rm = TRUE)
   # Get log-ratio
   fit_sp$lr <- log((fit_sp$pa + 1) / (fit_sp$so_only + 1))
 
@@ -595,14 +595,17 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
   data$pred <- predict.glm(bak$bak$bias_loc, data)
 
   predictions2$scale_so_l <- data$pred[predictions2$loc]
-  predictions2$scale_so_sp <- trait$pred[match(predictions2$species, trait$species)]
+  predictions2$scale_so_sp <- trait$pred[match(predictions2$species,
+                                                trait$species)]
   predictions2$zso_only <- s2bak.truncate(
         as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
         -15,
         15
       )
 
-  predictions2$pred.out <- predict(bak$bak$bias_adj, predictions2, type = "response")
+  predictions2$pred.out <- predict(bak$bak$bias_adj,
+                                    predictions2,
+                                    type = "response")
 
   # Convert back to wide format
   predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred.out")
@@ -617,8 +620,8 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' which can be either the output from s2bak.S2 or s2bak.SO.
 #'
 #' @param model Fitted SO or S2 models to use for prediction. If the object does
-#' not have stored SDMs, it will check to see if there is readout (alternatively,
-#' you could force readout with doReadout = T).
+#' not have stored SDMs, it will check to see if there is readout
+#' (alternatively, you could force readout with doReadout = T).
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used
@@ -640,8 +643,8 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' @rdname s2bak.predict
 #' @export
 s2bak.predict.SOS2 <- function(model,
-                                newdata, 
-                                predict.fun = predict.gam, 
+                                newdata,
+                                predict.fun = predict.gam,
                                 doReadout = FALSE,
                                 verbose = FALSE,
                                 ncores = 1, ...) {
@@ -651,7 +654,7 @@ s2bak.predict.SOS2 <- function(model,
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
     NC <- max(detectCores() - 1, 1)
-    options(cores = min(NC, ncores, na.rm = T))
+    options(cores = min(NC, ncores, na.rm = RUET))
   } else {
     stop("Invalid number of cores.")
   }
@@ -751,22 +754,22 @@ s2bak.predict.SOS2 <- function(model,
 #' rows for each location
 #' @rdname s2bak.predict
 #' @export
-s2bak.predict <- function(model, 
-                          newdata, 
-                          trait = NA, 
-                          predict.fun = predict.gam, 
-                          verbose = FALSE, 
-                          ncores = 1, 
-                          doReadout = FALSE, 
+s2bak.predict <- function(model,
+                          newdata,
+                          trait = NA,
+                          predict.fun = predict.gam,
+                          verbose = FALSE,
+                          ncores = 1,
+                          doReadout = FALSE,
                           ...) {
   # Simplest cases, which require a call to s2bak.predict.SOS2
 
   if (class(model) == "s2bak.SO" | class(model) == "s2bak.S2") {
-    return(s2bak.predict.SOS2(model, newdata, predict.fun, 
-                              doReadout = doReadout, verbose = verbose, 
+    return(s2bak.predict.SOS2(model, newdata, predict.fun,
+                              doReadout = doReadout, verbose = verbose,
                               ncores = ncores, ...))
   } else if (class(model) == "s2bak.S2BaK") {
-    if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)){
+    if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
       stop("Missing SO or BaK model(s).")
     }
     if (all(is.na(trait))) stop("Missing trait data for BaK predictin.")

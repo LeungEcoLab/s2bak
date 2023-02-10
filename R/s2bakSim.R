@@ -57,19 +57,19 @@ s2bakSim <- function(species = 30, sites = 3000, surv = 300,
     count <- 1
     go <- TRUE
     while (go && count <= max.iter) {
-      #### WHAT IS THIS?? ####
+      # defines where the species is best suited
       m <- runif(2, -2, 2)
       traits <- rnorm(2)
-      #### WHAT IS THIS?? ####
-      fake_traits <- rnorm(2)
-      #### WHAT IS THIS?? ####
-      sdv <- runif(1, .5, 2) # standard deviation
+      # trait that affects detection, unknown to the user
+      unk_traits <- rnorm(2)
+      # standard deviation (i.e., how much of a specialist the species it)
+      sdv <- runif(1, .5, 2)
       
       # Probability of detection based on environments 1 and 3
       p_d_e <- (env.prob[2] - env.prob[1]) * dnorm(dst(envs[[1]], envs[[3]])) / dnorm(0) + env.prob[1]
       
       # Probability of detection based on traits
-      p_d_t <- (trait.prob[2] - trait.prob[1]) * dnorm(dst(traits[1], fake_traits[2])) / dnorm(0) + trait.prob[1]
+      p_d_t <- (trait.prob[2] - trait.prob[1]) * dnorm(dst(traits[1], unk_traits[2])) / dnorm(0) + trait.prob[1]
       
       # Probability of establishment based on environment 1 and 2
       # p_e maximum value is always 1, may want to relax that later

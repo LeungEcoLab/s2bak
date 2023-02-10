@@ -1,3 +1,13 @@
+
+#' @title Distance function
+#' @description Calculate distance between two values
+#' @param x Numerical first value, order does not matter
+#' @param y Numerical second value, order does not matter
+#' @return Square root of the sum of the values squared
+dst <- function(x, y) {
+  return((x^2 + y^2)^.5)
+}
+
 #' @title Truncate values based on min and max input
 #'
 #' @description Truncate provided numerical values based on a defined minimum and maximum cutoff. Used in \link[s2bak]{s2bak.BaK} and \link[s2bak]{s2bak.predict.BaK}.
@@ -6,7 +16,6 @@
 #' @param min Minimum value to truncate, where \code{x <= min} with be \code{min}. If left as NA it will use the minimum value of x.
 #' @param max Maximum value to truncate, where \code{x >= max} with be \code{max}. If left as NA it will use the maximum value of x.
 #' @return Truncated x values
-#' @export
 s2bak.truncate <- function(x, min = NA, max = NA) {
   if (is.na(min)) min <- min(x)
   if (is.na(max)) max <- max(x)
@@ -24,7 +33,6 @@ s2bak.truncate <- function(x, min = NA, max = NA) {
 #' @param formula Formula or list of formulas to add 'pred' to
 #' @param pred Predictor name to add to formula
 #' @return A formula with added predictor
-#' @export
 s2bak.addPred <- function(formula, pred = "so") {
   # Check if formula or list of formulas
   if (typeof(formula) == "language") {
@@ -55,24 +63,6 @@ s2bak.addPred <- function(formula, pred = "so") {
   }
 }
 
-#' @title Modified maxnet function for s2bak
-#'
-#' @description Wrapper function for maxnet::maxnet function. The function converts the arguments for maxnet to the necessary structure for fitting an SDM within S2BaK, where the first and second arguments are the formula and dataset, respectively.
-#'
-#' @param formula Formula for fitting the maxnet model
-#' @param data Fitting dataset including response variable
-#' @return Output of the maxnet model
-#' @export
-s2bak.maxnet <- function(formula, data, ...) {
-  # Get response variable
-  yy <- as.character(formula[[2]])
-  p <- data[, which(colnames(data) == yy)]
-  data <- data[, which(colnames(data) != yy)]
-  # If there's a Y variable, remove it from formula
-  formula[[2]] <- NULL
-  return(maxnet(p, data, f = formula, ...))
-}
-
 #' @title Scale continuous values within data.frame.
 #'
 #' @description Scales provided columns to a mean of 0 and standard deviation of 1. Does not scale binary and categorical predictors. If providing projected data as well, then it will scale them using the mean and standard deviation of the inputted environment and output both as a list.
@@ -81,7 +71,6 @@ s2bak.maxnet <- function(formula, data, ...) {
 #' @param project Projected values to scale, using the mean and standard deviations of 'env'. If NA, then the function will only scale the environmental values provided
 #' @param getScaleValues Return mean and standard deviations of each factor
 #' @return Returns a data.frame of scaled columns for non-categorical and non-binary variables. If getScaleValues or project data is provided, returns as a list.
-#' @export
 s2bak.scale <- function(data, project = NA, getScaleValues = FALSE) {
   numer_env <- unlist(lapply(data[1, ], is.numeric))
 

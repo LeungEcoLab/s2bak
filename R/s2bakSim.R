@@ -30,12 +30,6 @@ s2bakSim <- function(species = 30, sites = 3000, surv = 300,
   env.prob <- sort(env.prob)
   trait.prob <- sort(trait.prob)
   
-  # Used-defined function
-  # Euclidean distance function?
-  dst <- function(x, y) {
-    return((x^2 + y^2)^.5)
-  }
-  
   l <- 1:sites
   b0 <- rnorm(1)
   b1 <- rnorm(1) + 2

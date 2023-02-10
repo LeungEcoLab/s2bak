@@ -152,7 +152,7 @@ An S2BaK class object containing S2, SO and BaK.
 \description{
 s2bak.SO function fits SDMs for each provided species within
 the same system, using a specified SDM approach (or the default which are
-AMs from the mgcv package). Parallelisation is possible when processing each
+GAMs from the mgcv package). Parallelisation is possible when processing each
 SDM, with the default being 1 core.
 
 The s2bak.S2 function fits SDMs using species sightings, background sites and

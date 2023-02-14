@@ -81,7 +81,8 @@
 #' @rdname s2bak
 #' @export
 s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
-                     sdm.fun = gam, overlapbackground = TRUE, nbackground = 10000,
+                     sdm.fun = gam, overlapbackground = TRUE, 
+                     nbackground = 10000,
                      surv.formula = TRUE,
                      ncores = 1, verbose = FALSE,
                      readout = NA, version = c("full", "short")[1], ...) {

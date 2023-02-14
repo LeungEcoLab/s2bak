@@ -19,8 +19,9 @@
 #' @param formula Formula for the SDMs, which serves as input for the given SDM.
 #' Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can
 #' be provided with index names corresponding to species. In this case, species
-#' will be fit using their corresponding formula.
-#' Assumes the response variable is 'pa'.
+#' will be fit using their corresponding formula. The response variable can
+#' have any name, as the function will detect it and name the columns
+#' accordingly.
 #' @param data Full environmental data used for fitting.
 #' @param obs Species observations as a data.frame, with a column for species
 #' name (must be labelled 'species') and column of index of observations to
@@ -98,7 +99,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   if (verbose) {
     cat("Fitting", ifelse(all(is.na(surv)), "sightings-only", "S2"),
         "model for", length(specieslist), "species\n")
-    cat(ncores, "cores\n")
+    cat(ncores, "core(s)\n")
   }
 
   # Add / if not there
@@ -131,7 +132,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       "index named after the corresponding species."))
     }
   } else {
-    stop(cat("Incorrect formula type. Please provide a single formula or a",
+    stop(cat("Invalid formula type. Please provide a single formula or a",
     "list of formulas with each index named after the corresponding species."))
   }
 
@@ -203,7 +204,8 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     # Generate fitting data using 'data', 'obs' and 'background'
     # If overlapbackground == FALSE, remove overlaps
     if (!overlapbackground) {
-      background <- background[!(background %in% obs[obs$species == i, which(colnames(obs) != "species")])]
+      background <- background[!(background %in% obs[obs$species == i, 
+                                  which(colnames(obs) != "species")])]
     }
     # Get the list of indices
     ind2 <- c(obs[obs$species == i, which(colnames(obs) != "species")],
@@ -215,7 +217,10 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       # Obs index name
       tmp_dat <- data[match(ind2, data[, ind]), ]
     }
-    tmp_dat[, yy] <- 0
+    # Add `yy` as column
+    tmp_dat <- cbind(tmp_dat, 0)
+    colnames(tmp_dat)[ncol(tmp_dat)] <- yy
+    # Set first N rows as sightings
     tmp_dat[1:nrow(obs[obs$species == i, ]), yy] <- 1
 
     # If we have a list of formulas, find corresponding index
@@ -249,7 +254,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       }
     }
 
-    tmp_sdm <- tryCatch(sdm.fun(ff, data = tmp_dat, ...),
+    tmp_sdm <- tryCatch(sdm.fun(ff, data = as.data.frame(tmp_dat), ...),
       error = function(e) {
         return(NULL)
       }

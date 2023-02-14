@@ -20,6 +20,7 @@
 #' Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can
 #' be provided with index names corresponding to species. In this case, species
 #' will be fit using their corresponding formula.
+#' Assumes the response variable is 'pa'.
 #' @param data Full environmental data used for fitting.
 #' @param obs Species observations as a data.frame, with a column for species
 #' name (must be labelled 'species') and column of index of observations to

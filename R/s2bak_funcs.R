@@ -218,11 +218,13 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       # Obs index name
       tmp_dat <- data[match(ind2, data[, ind]), ]
     }
+
     # Add `yy` as column
     tmp_dat <- cbind(tmp_dat, 0)
     colnames(tmp_dat)[ncol(tmp_dat)] <- yy
     # Set first N rows as sightings
     tmp_dat[1:nrow(obs[obs$species == i, ]), yy] <- 1
+    tmp_dat <- as.data.frame(tmp_dat)
 
     # If we have a list of formulas, find corresponding index
     if (flong) {
@@ -235,15 +237,17 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     if (!all(is.na(surv))) {
       # Generate survey data
       if (is.na(ind)) {
-        # Note: assumes that the first column is the index (or row number)
+        # Note: assumes that the first column of surv is the index
         #### MAYBE CHANGE THIS ####
         tmp_surv <- data[surv[, 1], ]
       } else {
         tmp_surv <- data[match(surv[, ind], data[, ind]), ]
       }
+      tmp_surv <- as.data.frame(tmp_surv)
       tmp_surv$pa <- surv[, i]
 
-      # Add 'so'
+      # Add 'so': sightings only for `tmp_dat` (1) or
+      # survey data for `tmp_surv` (0)
       tmp_dat$so <- 1
       tmp_surv$so <- 0
 
@@ -255,7 +259,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       }
     }
 
-    tmp_sdm <- tryCatch(sdm.fun(ff, data = as.data.frame(tmp_dat), ...),
+    tmp_sdm <- tryCatch(sdm.fun(ff, data = tmp_dat, ...),
       error = function(e) {
         return(NULL)
       }

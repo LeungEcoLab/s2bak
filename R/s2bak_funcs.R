@@ -488,7 +488,9 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
 #' @rdname s2bak
 #' @export
 s2bak.S2BaK <- function(formula, data, obs, surv, trait,
-                        background = NA, sdm.fun = gam, predict.fun = predict.gam, overlapbackground = TRUE, nbackground = 10000,
+                        background = NA, sdm.fun = gam,
+                        predict.fun = predict.gam,
+                        overlapbackground = TRUE, nbackground = 10000,
                         surv.formula = TRUE,
                         ncores = 1,
                         readout = NA, version = c("full", "short")[1], ...) {
@@ -533,15 +535,16 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   if (is.na(ind)) {
     #### ASSUMES 1ST COLUMN OF SURV IS ROWNUM ####
     ## Should maybe just detect it
-    surv_dat <- data[surv[, 1], ]
+    surv_dat <- as.data.frame(data[surv[, 1], ])
     surv2 <- surv[, -1]
   } else {
-    surv_dat <- data[match(surv[, ind], data[, ind]),
-                            -which(colnames(data) == ind)]
+    surv_dat <- as.data.frame(data[match(surv[, ind], data[, ind]),
+                            -which(colnames(data) == ind)])
     surv2 <- surv[, -which(colnames(surv) == ind)]
   }
 
   # Make predictions using out$SO (always type = "response")
+  ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
   predictions <- s2bak.predict.SOS2(out$s2bak.SO, surv_dat,
                                       doReadout = !is.na(readout),
                                       ncores = ncores, type = "response")

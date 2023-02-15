@@ -340,7 +340,8 @@ s2bak.SO <- function(formula, data, obs, background = NA,
 #' sites for all species, beyond those found in the survey data, as a matrix
 #' with columns for each species and rows for each site.
 #' @param surv Survey data as a matrix, with rows corresponding to each site.
-#' @param data Survey environmental data with columns for environmental data
+#' Assumes the first column is the index matching the environmental data.
+#' @param data Environmental data with columns for environmental data
 #' and rows for each site. Assumes all columns correspond to relevant
 #' environmental data and match with predictions/survey data. Also assumes
 #' that inputted columns are all relevant in modelling location bias.
@@ -354,13 +355,13 @@ s2bak.SO <- function(formula, data, obs, background = NA,
 #' @rdname s2bak
 #' @export
 s2bak.BaK <- function(predictions, surv, data, trait) {
-  wh <- which(!colnames(surv) %in% trait$species)
+  wh <- which(!colnames(surv)[-1] %in% trait$species)
   if (length(wh) > 0) {
     warning(paste("Columns from survey data missing from trait data and",
                   "not excluded from the fitting:", colnames(surv)[wh]))
     surv <- surv[, -wh]
   }
-  specieslist <- colnames(surv)
+  specieslist <- colnames(surv)[-1]
 
   # Model outputs
   out <- list(
@@ -405,7 +406,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
   }
 
   # Location biases, based on environment
-  fit_l <- data
+  fit_l <- as.data.frame(data)
   # Get summed predictions
   fit_l$so_only <- apply(predictions, 1, sum, na.rm = TRUE)
   # Get summed occurrences
@@ -426,6 +427,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
       fit_sp[i, wh] <- msd[colnames(wh)]
     }
   }
+
   # Get summed predictions
   fit_sp$so_only <- apply(predictions[, specieslist], 2, sum, na.rm = TRUE)
   # Get summed occurrences

@@ -94,18 +94,6 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     stop("Invalid number of cores.")
   }
 
-  # Get the list of species in the data
-  specieslist <- as.character(unique(obs$species))
-  cat("Fitting", ifelse(all(is.na(surv)), "sightings-only", "S2"),
-      "model for", length(specieslist), "species\n")
-  cat(ncores, "core(s)\n")
-
-  # Add / if not there
-  if (!is.na(readout)) {
-    readout <- paste0(readout, ifelse(substr(readout, nchar(readout),
-                      nchar(readout)) == "/", "", "/"))
-  }
-
   # Index name, if it's row #s or a specific column
   if (ncol(obs) != 2 | !("species" %in% colnames(obs))) {
     stop("Invalid columns in 'obs'.")
@@ -115,6 +103,34 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     if (!(ind %in% colnames(data))) {
       ind <- NA # Row number instead of column name
     }
+  }
+
+  # Are we fitting SO or S2?
+  mode <- ifelse(all(is.na(surv)), "s2bak.SO", "s2bak.S2")
+
+  # Get the list of species in the data
+  totalspecies <- as.character(unique(obs$species))
+  if (mode == "s2bak.SO") {
+    specieslist <- totalspecies
+  } else if(mode == "s2bak.S2") {
+    specieslist <- colnames(surv)
+    ## Assumes that if ind is NA, remove first entry (index)
+    ## Otherwise remove whatever has the value of `ind`
+    if (is.na(ind)) {
+      specieslist <- specieslist[-1]
+    }else{
+      specieslist <- specieslist[-which(specieslist == ind)]
+    }
+  }
+  cat("Fitting", mode, "model for",
+      length(specieslist), "out of",
+      length(totalspecies), "species\n")
+  cat(ncores, "core(s)\n\n")
+
+  # Add / if not there
+  if (!is.na(readout)) {
+    readout <- paste0(readout, ifelse(substr(readout, nchar(readout),
+                      nchar(readout)) == "/", "", "/"))
   }
 
   # Check formula type
@@ -150,7 +166,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     )
   )
 
-  class(l) <- ifelse(all(is.na(surv)), "s2bak.SO", "s2bak.S2")
+  class(l) <- mode
 
   # Add background options to the output
   if (is.na(background)) {

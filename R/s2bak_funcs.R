@@ -650,7 +650,7 @@ s2bak.predict.SOS2 <- function(model,
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
     NC <- max(detectCores() - 1, 1)
-    options(cores = min(NC, ncores, na.rm = RUET))
+    options(cores = min(NC, ncores, na.rm = TRUE))
   } else {
     stop("Invalid number of cores.")
   }
@@ -660,6 +660,7 @@ s2bak.predict.SOS2 <- function(model,
   if ("so" %in% colnames(newdata)) {
     warning("'so' column present in newdata. All values were converted to 0.")
   }
+  newdata <- as.data.frame(newdata)
   newdata$so <- 0
 
   # Get whether we are dealing with a readout or model

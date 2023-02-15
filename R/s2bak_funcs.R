@@ -781,12 +781,12 @@ s2bak.predict <- function(model,
     if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
       stop("Missing SO or BaK model(s).")
     }
-    if (all(is.na(trait))) stop("Missing trait data for BaK predictin.")
+    if (all(is.na(trait))) stop("Missing trait data for BaK prediction.")
     # Get species list, and identify which ones are S2 and with ones are SO-BaK
     # SO should contain all species
     specieslist <- model$s2bak.SO$species.list
 
-    # Check if NA
+    # Check if NULL
     if (!is.null(model$s2bak.S2)) {
       specieslist.s2 <- model$s2bak.S2$species.list
       specieslist.so <- specieslist[!(specieslist %in% specieslist.s2)]

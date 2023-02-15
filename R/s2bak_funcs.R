@@ -62,7 +62,6 @@
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
 #' automatically set if ncores=NA. If ncores > number of available cores - 1,
 #' set to the latter.
-#' @param verbose Prints statements of species being fit as we go.
 #' @param readout Directory to save fitted SDMs and background sites. If NA, it
 #' will not save any SDMs. Provides an additional output that shows where the
 #' SDM is saved (with file name). The output in this directory can later be
@@ -84,7 +83,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
                      sdm.fun = gam, overlapbackground = TRUE, 
                      nbackground = 10000,
                      surv.formula = TRUE,
-                     ncores = 1, verbose = FALSE,
+                     ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
   # Set cores
   registerDoParallel()
@@ -97,11 +96,9 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 
   # Get the list of species in the data
   specieslist <- as.character(unique(obs$species))
-  if (verbose) {
-    cat("Fitting", ifelse(all(is.na(surv)), "sightings-only", "S2"),
-        "model for", length(specieslist), "species\n")
-    cat(ncores, "core(s)\n")
-  }
+  cat("Fitting", ifelse(all(is.na(surv)), "sightings-only", "S2"),
+      "model for", length(specieslist), "species\n")
+  cat(ncores, "core(s)\n")
 
   # Add / if not there
   if (!is.na(readout)) {
@@ -182,7 +179,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
                         "opts.SO.rds",
                         "opts.S2.rds"))
     saveRDS(l, fopts)
-    if (verbose) cat("Output saved to ", fopts, "\n")
+    cat("Output saved to ", fopts, "\n")
   }
 
   # get response variable name
@@ -195,13 +192,8 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 
   # Fit SDM for each species
   # Saves output of each one as well
-  if (verbose) cat("Fitting SDMs\n")
+  cat("Fitting SDMs for", length(specieslist), "species\n")
   l$sdm <- foreach(i = specieslist) %dopar% {
-    if (verbose) {
-      cat("\t", i, "-",
-            nrow(obs[obs$species == i, ]),
-            "occurrences\n")
-    }
     # Generate fitting data using 'data', 'obs' and 'background'
     # If overlapbackground == FALSE, remove overlaps
     if (!overlapbackground) {
@@ -268,7 +260,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
     if (!is.na(readout)) {
       fname <- paste0(readout, gsub("\\s+", "_", i), "-", class(l), ".rds")
       saveRDS(list(species = i, sdm = tmp_sdm), fname)
-      if (verbose) cat("\t", fname, "\n")
+      cat("\t", fname, "\n")
 
       # Also save l in case of failure
       saveRDS(l, fopts)
@@ -323,13 +315,13 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 s2bak.SO <- function(formula, data, obs, background = NA,
                      sdm.fun = gam, overlapbackground = TRUE,
                      nbackground = 10000,
-                     ncores = 1, verbose = FALSE,
+                     ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
   return(s2bak.S2(formula, data, obs,
     surv = NA, background = background,
     sdm.fun = sdm.fun,
     overlapbackground = overlapbackground, nbackground = nbackground,
-    ncores = ncores, verbose = verbose, surv.formula = TRUE,
+    ncores = ncores, surv.formula = TRUE,
     readout = readout, version = version, ...
   ))
 }
@@ -357,12 +349,11 @@ s2bak.SO <- function(formula, data, obs, background = NA,
 #' Like with the predictions, the species in the dataset do not necessarily
 #' have to possess survey data, but will be used in the final adjustment model
 #' as final output.
-#' @param verbose Prints statements of species being fit as we go.
 #' @return Bias adjustment models, the kernels (location and species),
 #' as a second-order GLM.
 #' @rdname s2bak
 #' @export
-s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
+s2bak.BaK <- function(predictions, surv, data, trait) {
   wh <- which(!colnames(surv) %in% trait$species)
   if (length(wh) > 0) {
     warning(paste("Columns from survey data missing from trait data and",
@@ -378,10 +369,8 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
   )
   class(out) <- "s2bak.BaK"
 
-  if (verbose) {
-    cat("Fitting bias adjustment kernel on", length(specieslist),
-    "survey species and", length(out$fullspecies), "species total.\n")
-  }
+  cat("Fitting bias adjustment kernel on", length(specieslist),
+  "survey species and", length(out$fullspecies), "species total.\n")
 
   # Throw error if predictions, surv and data are not aligned
   if (length(unique(c(nrow(predictions), nrow(data), nrow(surv)))) > 1) {
@@ -489,7 +478,7 @@ s2bak.BaK <- function(predictions, surv, data, trait, verbose = FALSE) {
 s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                         background = NA, sdm.fun = gam, predict.fun = predict.gam, overlapbackground = TRUE, nbackground = 10000,
                         surv.formula = TRUE,
-                        ncores = 1, verbose = FALSE,
+                        ncores = 1,
                         readout = NA, version = c("full", "short")[1], ...) {
   # Output for s2bak.S2BaK
   out <- list()
@@ -511,8 +500,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                             background = background, sdm.fun = sdm.fun,
                             overlapbackground = overlapbackground,
                             nbackground = nbackground, ncores = ncores,
-                            verbose = verbose, readout = readout,
-                            version = version, ...)
+                            readout = readout, version = version, ...)
 
   ## Next, fit S2 model
   ## Only for species with survey data
@@ -526,8 +514,8 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                             overlapbackground = overlapbackground,
                             nbackground = nbackground,
                             surv.formula = surv.formula,
-                            ncores = ncores, verbose = verbose,
-                            readout = readout, version = version, ...)
+                            ncores = ncores, readout = readout,
+                            version = version, ...)
 
   ## Finally, fit BaK
   if (is.na(ind)) {
@@ -544,8 +532,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   # Make predictions using out$SO (always type = "response")
   predictions <- s2bak.predict.SOS2(out$s2bak.SO, surv_dat,
                                       doReadout = !is.na(readout),
-                                      ncores = ncores,
-                                      verbose = verbose, type = "response")
+                                      ncores = ncores, type = "response")
 
   out$s2bak.BaK <- s2bak.BaK(predictions, surv2, surv_dat, trait)
 
@@ -643,7 +630,6 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' we are interested in.
 #' @param doReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
-#' @param verbose Prints statements of species being fit as we go.
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
 #' automatically set if ncores=NA. If ncores > number of available cores - 1,
 #' set to the latter.
@@ -657,9 +643,8 @@ s2bak.predict.SOS2 <- function(model,
                                 newdata,
                                 predict.fun = predict.gam,
                                 doReadout = FALSE,
-                                verbose = FALSE,
                                 ncores = 1, ...) {
-  if (verbose) cat("Predicting of class", class(model), "\n")
+  cat("Predicting of class", class(model), "\n")
 
   # Set cores
   registerDoParallel()
@@ -679,10 +664,10 @@ s2bak.predict.SOS2 <- function(model,
 
   # Get whether we are dealing with a readout or model
   if (!is.null(model$sdm) & !doReadout) {
-    if (verbose) cat("Reading models from argument\n")
+    cat("Reading models from argument\n")
     dir <- FALSE
   } else if (doReadout | !is.null(model$options$readout)) {
-    if (verbose) cat("Reading models from directory\n")
+    cat("Reading models from directory\n")
     dir <- TRUE
 
     lf <- model$options$readout
@@ -698,8 +683,6 @@ s2bak.predict.SOS2 <- function(model,
   tmp <- as.data.frame(matrix(NA, nrow = nrow(newdata), ncol = length(specieslist)))
   names(tmp) <- specieslist
   tmp[] <- foreach(i = specieslist) %dopar% {
-    if (verbose) cat("\t", i, "\n")
-
     if (dir) {
       # Read in appropriate model, whose filename
       # should be found in l$options$readout
@@ -758,7 +741,6 @@ s2bak.predict.SOS2 <- function(model,
 #' @param trait Trait data, optional if model is S2 or SO
 #' @param predict.fun prediction function for SDM (for S2 and SO)
 #' @param doReadout Whether to force doReadout in SOS2
-#' @param verbose Add print statements
 #' @param ncores Paralellize SO/S2 predictions, if NA then auto-pick it
 #' @param ... Any additional arguments for the predict.fun
 #' @return Model predictions as a data.frame with columns for each species and
@@ -769,7 +751,6 @@ s2bak.predict <- function(model,
                           newdata,
                           trait = NA,
                           predict.fun = predict.gam,
-                          verbose = FALSE,
                           ncores = 1,
                           doReadout = FALSE,
                           ...) {
@@ -777,7 +758,7 @@ s2bak.predict <- function(model,
 
   if (class(model) == "s2bak.SO" | class(model) == "s2bak.S2") {
     return(s2bak.predict.SOS2(model, newdata, predict.fun,
-                              doReadout = doReadout, verbose = verbose,
+                              doReadout = doReadout,
                               ncores = ncores, ...))
   } else if (class(model) == "s2bak.S2BaK") {
     if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
@@ -796,8 +777,7 @@ s2bak.predict <- function(model,
       # Make predictions for S2 species
       out.S2 <- s2bak.predict.SOS2(model = model$s2bak.S2, newdata = newdata,
                                     predict.fun = predict.fun,
-                                    doReadout = doReadout,
-                                    verbose = verbose, ncores = ncores, ...)
+                                    doReadout = doReadout, ncores = ncores, ...)
     } else {
       # No S2, fit for all species
       specieslist.so <- specieslist
@@ -806,8 +786,7 @@ s2bak.predict <- function(model,
     # Make predictions for SO species
     out.SO <- s2bak.predict.SOS2(model = model$s2bak.SO, newdata = newdata,
                                   predict.fun = predict.fun,
-                                  doReadout = doReadout,
-                                  verbose = verbose, ncores = ncores, ...)
+                                  doReadout = doReadout, ncores = ncores, ...)
 
     # Make adjustment for SO species
     out.SO <- s2bak.predict.BaK(out.SO, model$s2bak.BaK, trait, newdata)

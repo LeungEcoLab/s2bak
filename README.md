@@ -30,7 +30,7 @@ Four data objects are primarily required to fit the S2BaK model. **Making the da
 
 Simulated sample data can be generated using the function `s2bakSim`, which is used for demonstration and to illustrate the data structure.
 
-The functions `s2bak.S2`, `s2bak.SO` and `s2bak.S2BaK` fit SDMs for multiple species, but the user may specify a different SDM model than the default (`gam` from the `mgcv` package). The package currently supports fitting SDMs using the `maxnet` package, as well as functions that support formulae (e.g., `mgcv::gam` and `glm`). **Supporting the most popular SDM methods is a goal**.
+The functions `s2bak.S2`, `s2bak.SO` and `s2bak.S2BaK` fit SDMs for multiple species, but the user may specify a different SDM model than the default (`gam` from the `mgcv` package). The package currently supports fitting SDM model functions that support formulae (e.g., `mgcv::gam` and `glm`). **Supporting the most popular SDM methods is a goal, such as MaxEnt**.
 
 Given that the framework is intended to be used with multiple species, the package has integrated parallelization using the `doParallel` package. Within the functions `s2bak.S2`, `s2bak.SO` and `s2bak.S2BaK` functions, which are all used to fit SDMs, the user can specify the number of cores using the `ncores` parameter.
 

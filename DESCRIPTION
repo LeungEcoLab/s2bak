@@ -1,5 +1,5 @@
 Package: s2bak
-Title: Fit species distribution models using the S2BaK framework.
+Title: Fit species distribution models for multiple using the S2BaK framework.
 Version: 0.09.02.23
 Authors@R: c(
     person(given = "Dat", 
@@ -12,7 +12,7 @@ Authors@R: c(
            email = "brian.leung2@mcgill.ca",
            role = c("aut"))
     )
-Description: Fit species distribution models (SDMs) for multiple species using S2BaK, and predict species distributions using the models.
+Description: Fit and predict species distributions forfor multiple species, and account for biases using the S2BaK framework.
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8

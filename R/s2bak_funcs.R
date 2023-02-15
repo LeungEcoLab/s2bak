@@ -536,20 +536,21 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
     #### ASSUMES 1ST COLUMN OF SURV IS ROWNUM ####
     ## Should maybe just detect it
     surv_dat <- as.data.frame(data[surv[, 1], ])
-    surv2 <- surv[, -1]
   } else {
-    surv_dat <- as.data.frame(data[match(surv[, ind], data[, ind]),
-                            -which(colnames(data) == ind)])
-    surv2 <- surv[, -which(colnames(surv) == ind)]
+    wh <- which(colnames(data) == ind)
+    surv_dat <- as.data.frame(data[match(surv[, ind], data[, ind]), ])
+    # Move `ind` it to the first column
+    surv_dat <- surv_dat[, c(ind, colnames(surv_dat)[-wh])]
   }
 
   # Make predictions using out$SO (always type = "response")
   ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
   predictions <- s2bak.predict.SOS2(out$s2bak.SO, surv_dat,
+                                      predict.fun = predict.fun,
                                       doReadout = !is.na(readout),
                                       ncores = ncores, type = "response")
 
-  out$s2bak.BaK <- s2bak.BaK(predictions, surv2, surv_dat, trait)
+  out$s2bak.BaK <- s2bak.BaK(predictions, surv, surv_dat, trait)
 
   return(out)
 }

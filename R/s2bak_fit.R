@@ -50,7 +50,7 @@
 #' observations should be included. By default, it allows overlap. If FALSE,
 #' number of background sites may be less than specified or provided.
 #' @param nbackground Number of background sites to sample. Only applies
-#' if background = FALSE.
+#' if background = NA.
 #' @param surv.formula Whether the binary variable 'so', denoting whether sites
 #' are sightings-only or survey, should be added to the formula(s). If survey
 #' data is not provided, then 'so' will not be added to the formula(s)

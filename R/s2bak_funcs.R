@@ -18,7 +18,7 @@
 #'
 #' @param formula Formula for the SDMs, which serves as input for the given SDM.
 #' Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can
-#' be provided with index names corresponding to species. In this case, species
+#' be provided with names corresponding to species. In this case, species
 #' will be fit using their corresponding formula. The response variable can
 #' have any name, as the function will detect it and name the columns
 #' accordingly.
@@ -167,7 +167,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   class(l) <- mode
 
   # Add background options to the output
-  if (is.na(background)) {
+  if (all(is.na(background))) {
     l$options$background <- "Randomly sampled background sites"
     l$options$nbackground <- nbackground
     # Sample background sites, if NA
@@ -243,7 +243,6 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       # Generate survey data
       if (is.na(ind)) {
         # Note: assumes that the first column of surv is the index
-        #### MAYBE CHANGE THIS ####
         tmp_surv <- data[surv[, 1], ]
       } else {
         tmp_surv <- data[match(surv[, ind], data[, ind]), ]
@@ -547,7 +546,6 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   ## Finally, fit BaK
   if (is.na(ind)) {
     #### ASSUMES 1ST COLUMN OF SURV IS ROWNUM ####
-    ## Should maybe just detect it
     surv_dat <- as.data.frame(data[surv[, 1], ])
   } else {
     wh <- which(colnames(data) == ind)
@@ -710,7 +708,11 @@ s2bak.predict.SOS2 <- function(model,
   # Get length of species
   specieslist <- model$species.list
 
-  tmp <- as.data.frame(matrix(NA, nrow = nrow(newdata), ncol = length(specieslist)))
+  tmp <- as.data.frame(matrix( 
+                              NA,
+                              nrow = nrow(newdata),
+                              ncol = length(specieslist)
+                            ))
   names(tmp) <- specieslist
   tmp[] <- foreach(i = specieslist) %dopar% {
     if (dir) {

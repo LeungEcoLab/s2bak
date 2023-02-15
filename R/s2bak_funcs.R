@@ -450,7 +450,16 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
       stringsAsFactors = FALSE
     )
     if (x %in% colnames(surv)) ddf$pa <- surv[, x]
-    ddf$zso_only <- s2bak.truncate(as.vector(as.matrix(-log((1 - predictions[, x]) / predictions[, x]))), -15, 15)
+    ddf$zso_only <- s2bak.truncate(
+                            as.vector(
+                                as.matrix(-log(
+                                    (1 - predictions[, x]) /
+                                    predictions[, x]
+                                  ))
+                            ), 
+                            -15,
+                            15
+                          )
     ddf$scale_so_l <- predict(out$bak$bias_loc, data)
     ddf$scale_so_sp <- trait$pred[trait$species == x]
     return(ddf)
@@ -458,7 +467,8 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
   fit_adj <- do.call(rbind, fit_adj)
 
   # Fit bias adjustment model
-  out$bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l, family = "binomial", data = fit_adj)
+  out$bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l, 
+                          family = "binomial", data = fit_adj)
 
   return(out)
 }

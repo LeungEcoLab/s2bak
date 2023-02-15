@@ -125,7 +125,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   cat("Fitting", mode, "model for",
       length(specieslist), "out of",
       length(totalspecies), "species\n")
-  cat(ncores, "core(s)\n\n")
+  cat(ncores, "core(s)\n")
 
   # Add / if not there
   if (!is.na(readout)) {
@@ -208,7 +208,6 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 
   # Fit SDM for each species
   # Saves output of each one as well
-  cat("Fitting SDMs for", length(specieslist), "species\n")
   l$sdm <- foreach(i = specieslist) %dopar% {
     # Generate fitting data using 'data', 'obs' and 'background'
     # If overlapbackground == FALSE, remove overlaps
@@ -537,7 +536,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   if (all(is.na(surv))) stop("Missing survey data.")
 
   out$s2bak.S2 <- s2bak.S2(formula = formula, data = data,
-                            obs = obs[obs$species %in% colnames(surv), ],
+                            obs = obs,
                             surv = surv,
                             background = background,
                             sdm.fun = sdm.fun,

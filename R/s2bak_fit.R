@@ -139,13 +139,14 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
     # Multiple formulas, but we still need to check if all species are there
     flong <- TRUE
     if (!all(speciesList %in% names(formula))) {
-      stop(cat("Incorrect formula type.",
+      stop(paste("Incorrect formula type.",
       "Please provide a single formula or a list of formulas with each",
-      "index named after the corresponding species."))
+      "index named after the corresponding species.\n"))
     }
   } else {
-    stop(cat("Invalid formula type. Please provide a single formula or a",
-    "list of formulas with each index named after the corresponding species."))
+    stop(paste("Invalid formula type. Please provide a single formula or a",
+    "list of formulas with each index named after the",
+    "corresponding species.\n"))
   }
 
   # Output for the model
@@ -387,8 +388,8 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
 
   # Throw error if predictions, surv and data are not aligned
   if (length(unique(c(nrow(predictions), nrow(data), nrow(surv)))) > 1) {
-    stop(cat("Differing rows for predictions, survey and environment data:",
-            "sites/rows must correspond with each other."))
+    stop(paste("Differing rows for predictions, survey and environment data:",
+            "sites/rows must correspond with each other.\n"))
   }
 
   # Throw error if species missing from traits data.frame
@@ -435,8 +436,8 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
     #### TBD ####
     wh <- which(is.na(fit_sp[i, ]))
     if (length(wh) > 0) {
-      warning(cat("Missing trait data, which were imputed",
-                  "using mean of the column."))
+      warning(paste("Missing trait data, which were imputed",
+                  "using mean of the column.\n"))
       fit_sp[i, wh] <- msd[colnames(wh)]
     }
   }

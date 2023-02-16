@@ -176,7 +176,7 @@ predict.s2bak.so <- function(model,
 
 #' @description If the provided model is class s2bak.s2 or s2bak.so,
 #' predictions will be made using \link[s2bak]{predict.s2bak.s2}. If an SO
-#'  model with BaK is provided (that is, an S2BaK class model with S2 = NULL,
+#' model with BaK is provided (that is, an S2BaK class model with S2 = NULL,
 #' for example through combine without a provided S2), the functions returns
 #' adjusted predictions requiring trait data for the species. If the full
 #' S2BaK model (SO, S2 and BaK are provided), the function will make predictions

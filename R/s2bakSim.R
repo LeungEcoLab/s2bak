@@ -30,11 +30,11 @@ s2bakSim <- function(species = 30, sites = 3000, surv = 300,
                      env.prob = c(0.5, 1), trait.prob = c(0.5, 1),
                      max.iter = 100) {
   if (length(env.prob) != 2 || length(trait.prob) != 2) {
-    stop(cat("Invalid range for probabilities.",
+    stop(paste("Invalid range for probabilities.",
     "Ensure that two numeric values are provided."))
   }
   if (surv > sites) {
-    stop(cat("Number of survey sites exceeds total number of sites:",
+    stop(paste("Number of survey sites exceeds total number of sites:",
     "surv must be less than sites"))
   }
 

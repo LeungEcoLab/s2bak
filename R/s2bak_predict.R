@@ -28,16 +28,16 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 
   predictions2$scale_so_l <- data$pred[predictions2$loc]
   predictions2$scale_so_sp <- trait$pred[match(predictions2$species,
-                                                trait$species)]
+                                               trait$species)]
   predictions2$zso_only <- s2bak.truncate(
-        as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
-        -15,
-        15
-      )
+    as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
+    -15,
+    15
+  )
 
   predictions2$pred_out <- predict(bak$bak$bias_adj,
-                                    predictions2,
-                                    type = "response")
+                                   predictions2,
+                                   type = "response")
 
   # Convert back to wide format
   predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred_out")
@@ -72,10 +72,10 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 #' @rdname predict.s2bak
 #' @export predict.s2bak.s2
 predict.s2bak.s2 <- function(model,
-                                newdata,
-                                predict.fun = predict.glm,
-                                useReadout = FALSE,
-                                ncores = 1, ...) {
+                             newdata,
+                             predict.fun = predict.glm,
+                             useReadout = FALSE,
+                             ncores = 1, ...) {
   cat("Predicting of class", class(model), "\n")
 
   # Set cores
@@ -114,10 +114,10 @@ predict.s2bak.s2 <- function(model,
   speciesList <- model$speciesList
 
   tmp <- as.data.frame(matrix(
-                              NA,
-                              nrow = nrow(newdata),
-                              ncol = length(speciesList)
-                            ))
+    NA,
+    nrow = nrow(newdata),
+    ncol = length(speciesList)
+  ))
   names(tmp) <- speciesList
   tmp[] <- foreach(i = speciesList) %dopar% {
     if (dir) {
@@ -161,16 +161,16 @@ predict.s2bak.s2 <- function(model,
 #' @rdname predict.s2bak
 #' @export predict.s2bak.so
 predict.s2bak.so <- function(model,
-                        newdata,
-                        predict.fun = predict.glm,
-                        useReadout = FALSE,
-                        ncores = 1, ...) {
+                             newdata,
+                             predict.fun = predict.glm,
+                             useReadout = FALSE,
+                             ncores = 1, ...) {
   return(predict.s2bak.s2(
-          model = model,
-          newdata = newdata,
-          predict.fun = predict.fun,
-          useReadout = useReadout,
-          ncores = ncores, ...
+    model = model,
+    newdata = newdata,
+    predict.fun = predict.fun,
+    useReadout = useReadout,
+    ncores = ncores, ...
   ))
 }
 
@@ -206,8 +206,8 @@ predict.s2bak <- function(model,
 
   if (class(model) == "s2bak.so" | class(model) == "s2bak.s2") {
     return(predict.s2bak.s2(model, newdata, predict.fun,
-                              useReadout = useReadout,
-                              ncores = ncores, ...))
+                            useReadout = useReadout,
+                            ncores = ncores, ...))
   } else if (class(model) == "s2bak.S2BaK") {
     if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
       stop("Missing SO or BaK model(s).")
@@ -224,9 +224,9 @@ predict.s2bak <- function(model,
 
       # Make predictions for S2 species
       out.S2 <- predict.s2bak.s2(model = model$s2bak.S2, newdata = newdata,
-                                    predict.fun = predict.fun,
-                                    useReadout = useReadout,
-                                    ncores = ncores, ...)
+                                 predict.fun = predict.fun,
+                                 useReadout = useReadout,
+                                 ncores = ncores, ...)
     } else {
       # No S2, fit for all species
       speciesList.so <- speciesList
@@ -234,8 +234,8 @@ predict.s2bak <- function(model,
 
     # Make predictions for SO species
     out.SO <- predict.s2bak.so(model = model$s2bak.SO, newdata = newdata,
-                                  predict.fun = predict.fun,
-                                  useReadout = useReadout, ncores = ncores, ...)
+                               predict.fun = predict.fun,
+                               useReadout = useReadout, ncores = ncores, ...)
 
     # Make adjustment for SO species
     out.SO <- predict.bak(out.SO, model$s2bak.BaK, trait, newdata)

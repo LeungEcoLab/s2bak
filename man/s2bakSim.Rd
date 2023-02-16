@@ -46,6 +46,6 @@ to primarily to illustrate the data structure, as well as demonstration
 of the provided functions.
 }
 \examples{
-## See ?s2bak
+## See ?fit.s2bak
 
 }

@@ -4,10 +4,8 @@
 #' distribution modelling (SDM), using the target-group background (TGB)
 #' sampling method.
 #'
-#' Sites within the species observations, weighted by the number of sightins
-#' in `obs`.
+#' Sites are sampled, weighted by the number of sightings found in `obs`.
 #'
-#' without sightings will be excluded from sampling.
 #' @param obs Species observations as a data.frame, with a column for species
 #' name (must be labelled 'species') and column of index of observations to
 #' reflect presences. If the index column name is not found in 'data', it
@@ -17,8 +15,7 @@
 #' maximum will be sampled.
 #'
 #' @examples
-#' ## WIP ##
-#' ## But here we would generate data, sample background sites then fit model
+#' ## See ?fit.s2bak
 #'
 #' @return A vector of indices corresponding to the `data` argument, which can
 #' be used to fit SDMs through link[s2bak]{fit.s2bak},
@@ -40,7 +37,7 @@ tgb_sample <- function(obs, nbackground = 10000) {
 
   if (nrow(obs_count) <= nbackground) {
     warning(paste("'nbackground' exceeds number of available sites; returning",
-      nrow(obs_count), "sites\n"))
+                  nrow(obs_count), "sites\n"))
     return(obs_count[, 1])
   }
 

@@ -78,11 +78,11 @@
 #' @rdname s2bak
 #' @export
 fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
-                     sdm.fun = glm, overlapBackground = TRUE,
-                     nbackground = 10000,
-                     addSurvey = TRUE,
-                     ncores = 1,
-                     readout = NA, version = c("full", "short")[1], ...) {
+                         sdm.fun = glm, overlapBackground = TRUE,
+                         nbackground = 10000,
+                         addSurvey = TRUE,
+                         ncores = 1,
+                         readout = NA, version = c("full", "short")[1], ...) {
   # Set cores
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
@@ -128,7 +128,7 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
   # Add / if not there
   if (!is.na(readout)) {
     readout <- paste0(readout, ifelse(substr(readout, nchar(readout),
-                      nchar(readout)) == "/", "", "/"))
+                                             nchar(readout)) == "/", "", "/"))
   }
 
   # Check formula type
@@ -140,13 +140,14 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
     flong <- TRUE
     if (!all(speciesList %in% names(formula))) {
       stop(paste("Incorrect formula type.",
-      "Please provide a single formula or a list of formulas with each",
-      "index named after the corresponding species.\n"))
+                 "Please provide a single formula or a list of",
+                 "formulas with each index named after",
+                 "the corresponding species.\n"))
     }
   } else {
     stop(paste("Invalid formula type. Please provide a single formula or a",
-    "list of formulas with each index named after the",
-    "corresponding species.\n"))
+               "list of formulas with each index named after the",
+               "corresponding species.\n"))
   }
 
   # Output for the model
@@ -191,8 +192,8 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
   if (!is.na(readout)) {
     fopts <- paste0(readout,
                     ifelse(all(is.na(surv)),
-                        "opts.SO.rds",
-                        "opts.S2.rds"))
+                           "opts.SO.rds",
+                           "opts.S2.rds"))
     saveRDS(l, fopts)
     cat("Output saved to ", fopts, "\n")
   }
@@ -210,13 +211,12 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
   l$sdm <- foreach(i = speciesList) %dopar% {
     # Generate fitting data using 'data', 'obs' and 'background'
     # If overlapBackground == FALSE, remove overlaps
+    wh_i <- which(colnames(obs) != "species")
     if (!overlapBackground) {
-      background <- background[!(background %in% obs[obs$species == i,
-                                  which(colnames(obs) != "species")])]
+      background <- background[!(background %in% obs[obs$species == i, wh_i])]
     }
     # Get the list of indices
-    ind2 <- c(obs[obs$species == i, which(colnames(obs) != "species")],
-              background)
+    ind2 <- c(obs[obs$species == i, wh_i], background)
     # Row number
     if (is.na(ind)) {
       tmp_dat <- data[ind2, ]
@@ -265,9 +265,9 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
     }
 
     tmp_sdm <- tryCatch(sdm.fun(ff, data = tmp_dat, ...),
-      error = function(e) {
-        return(NULL)
-      }
+                        error = function(e) {
+                          return(NULL)
+                        }
     )
 
     if (!is.na(readout)) {
@@ -326,16 +326,17 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
 #' @rdname s2bak
 #' @export
 fit.s2bak.so <- function(formula, data, obs, background = NA,
-                     sdm.fun = glm, overlapBackground = TRUE,
-                     nbackground = 10000,
-                     ncores = 1,
-                     readout = NA, version = c("full", "short")[1], ...) {
+                         sdm.fun = glm, overlapBackground = TRUE,
+                         nbackground = 10000,
+                         ncores = 1,
+                         readout = NA, version = c("full", "short")[1], ...) {
   return(fit.s2bak.s2(formula, data, obs,
-    surv = NA, background = background,
-    sdm.fun = sdm.fun,
-    overlapBackground = overlapBackground, nbackground = nbackground,
-    ncores = ncores, addSurvey = TRUE,
-    readout = readout, version = version, ...
+                      surv = NA, background = background,
+                      sdm.fun = sdm.fun,
+                      overlapBackground = overlapBackground,
+                      nbackground = nbackground,
+                      ncores = ncores, addSurvey = TRUE,
+                      readout = readout, version = version, ...
   ))
 }
 
@@ -384,12 +385,12 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
   class(out) <- "s2bak.bak"
 
   cat("Fitting bias adjustment kernel on", length(speciesList),
-  "survey species and", length(out$speciesListFull), "species total.\n")
+      "survey species and", length(out$speciesListFull), "species total.\n")
 
   # Throw error if predictions, surv and data are not aligned
   if (length(unique(c(nrow(predictions), nrow(data), nrow(surv)))) > 1) {
     stop(paste("Differing rows for predictions, survey and environment data:",
-            "sites/rows must correspond with each other.\n"))
+               "sites/rows must correspond with each other.\n"))
   }
 
   # Throw error if species missing from traits data.frame
@@ -437,7 +438,7 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
     wh <- which(is.na(fit_sp[i, ]))
     if (length(wh) > 0) {
       warning(paste("Missing trait data, which were imputed",
-                  "using mean of the column.\n"))
+                    "using mean of the column.\n"))
       fit_sp[i, wh] <- msd[colnames(wh)]
     }
   }
@@ -452,11 +453,11 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
   out$bak <- list()
   # Fit bias kernels
   out$bak$bias_loc <- glm(formula(
-                            paste("lr ~", paste(names_xbe, collapse = "+"))),
-                          data = fit_l)
+    paste("lr ~", paste(names_xbe, collapse = "+"))),
+    data = fit_l)
   out$bak$bias_sp <- glm(formula(
-                            paste("lr ~", paste(names_xbt, collapse = "+"))),
-                          data = fit_sp)
+    paste("lr ~", paste(names_xbt, collapse = "+"))),
+    data = fit_sp)
 
   # Generate the final data.frame to model bias adjustment (based on mk_bak)
   # Include all species, beyond just the ones found in the survey
@@ -469,15 +470,15 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
     )
     if (x %in% colnames(surv)) ddf$pa <- surv[, x]
     ddf$zso_only <- s2bak.truncate(
-                            as.vector(
-                                as.matrix(-log(
-                                    (1 - predictions[, x]) /
-                                    predictions[, x]
-                                  ))
-                            ),
-                            -15,
-                            15
-                          )
+      as.vector(
+        as.matrix(-log(
+          (1 - predictions[, x]) /
+            predictions[, x]
+        ))
+      ),
+      -15,
+      15
+    )
     ddf$scale_so_l <- predict(out$bak$bias_loc, data)
     ddf$scale_so_sp <- trait$pred[trait$species == x]
     return(ddf)
@@ -506,12 +507,12 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
 #' @rdname s2bak
 #' @export
 fit.s2bak <- function(formula, data, obs, surv, trait,
-                        background = NA, sdm.fun = glm,
-                        predict.fun = predict.glm,
-                        overlapBackground = TRUE, nbackground = 10000,
-                        addSurvey = TRUE,
-                        ncores = 1,
-                        readout = NA, version = c("full", "short")[1], ...) {
+                      background = NA, sdm.fun = glm,
+                      predict.fun = predict.glm,
+                      overlapBackground = TRUE, nbackground = 10000,
+                      addSurvey = TRUE,
+                      ncores = 1,
+                      readout = NA, version = c("full", "short")[1], ...) {
   # Output for fit.s2bak
   out <- list()
   class(out) <- "s2bak"
@@ -529,25 +530,25 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
 
   ## First, fit SO model
   out$s2bak.SO <- fit.s2bak.so(formula = formula, data = data, obs = obs,
-                            background = background, sdm.fun = sdm.fun,
-                            overlapBackground = overlapBackground,
-                            nbackground = nbackground, ncores = ncores,
-                            readout = readout, version = version, ...)
+                               background = background, sdm.fun = sdm.fun,
+                               overlapBackground = overlapBackground,
+                               nbackground = nbackground, ncores = ncores,
+                               readout = readout, version = version, ...)
 
   ## Next, fit S2 model
   ## Only for species with survey data
   if (all(is.na(surv))) stop("Missing survey data.")
 
   out$s2bak.S2 <- fit.s2bak.s2(formula = formula, data = data,
-                            obs = obs,
-                            surv = surv,
-                            background = background,
-                            sdm.fun = sdm.fun,
-                            overlapBackground = overlapBackground,
-                            nbackground = nbackground,
-                            addSurvey = addSurvey,
-                            ncores = ncores, readout = readout,
-                            version = version, ...)
+                               obs = obs,
+                               surv = surv,
+                               background = background,
+                               sdm.fun = sdm.fun,
+                               overlapBackground = overlapBackground,
+                               nbackground = nbackground,
+                               addSurvey = addSurvey,
+                               ncores = ncores, readout = readout,
+                               version = version, ...)
 
   ## Finally, fit BaK
   if (is.na(ind)) {
@@ -563,9 +564,9 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
   # Make predictions using out$SO (always type = "response")
   ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
   predictions <- predict.s2bak.s2(out$s2bak.SO, surv_dat,
-                                      predict.fun = predict.fun,
-                                      useReadout = !is.na(readout),
-                                      ncores = ncores, type = "response")
+                                  predict.fun = predict.fun,
+                                  useReadout = !is.na(readout),
+                                  ncores = ncores, type = "response")
 
   out$s2bak.BaK <- fit.s2bak.bak(predictions, surv, surv_dat, trait)
 

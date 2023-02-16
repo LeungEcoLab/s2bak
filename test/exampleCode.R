@@ -12,8 +12,8 @@ setwd("../test/")
 library(devtools)
 library(roxygen2)
 if (0) {
-    tryCatch(detach("package:s2bak", unload = TRUE))
-    install_github("https://github.com/LeungEcoLab/s2bak", force = TRUE)
+  tryCatch(detach("package:s2bak", unload = TRUE))
+  install_github("https://github.com/LeungEcoLab/s2bak", force = TRUE)
 }
 
 #### TEST CODE ####
@@ -31,54 +31,55 @@ dat$Survey <- dat$Survey[, c(1, sample(2:11, 10))]
 ## Note that in this instance, background site indices are not provided,
 ## so they are randomly sampled from `data`
 model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
-                            Environment3 + Environment4,
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        ncores = 1,
-                        sdm.fun = glm,
-                        nbackground = 2000,
-                        family = binomial
-                    )
+                           Environment3 + Environment4,
+                         data = dat$Environment,
+                         obs = dat$Sightings,
+                         ncores = 1,
+                         sdm.fun = glm,
+                         nbackground = 2000,
+                         family = binomial
+)
 
 ## We can also fit models using GAM
 library(mgcv)
 model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
-                            s(Environment3) + s(Environment4),
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        ncores = 1,
-                        sdm.fun = mgcv::gam,
-                        nbackground = 2000,
-                        method = "GCV.Cp",
-                        select = TRUE,
-                        family = binomial
-                    )
+                               s(Environment3) + s(Environment4),
+                             data = dat$Environment,
+                             obs = dat$Sightings,
+                             ncores = 1,
+                             sdm.fun = mgcv::gam,
+                             nbackground = 2000,
+                             method = "GCV.Cp",
+                             select = TRUE,
+                             family = binomial
+)
 
 ## Fitting using S2 (that is, including survey data into the SDM)
 ## This will limit it the number of models fit to the species with survey data!
 model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
-                            Environment3 + Environment4,
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        surv = dat$Survey,
-                        ncores = 1,
-                        sdm.fun = glm,
-                        nbackground = 2000,
-                        family = binomial
-                    )
+                           Environment3 + Environment4,
+                         data = dat$Environment,
+                         obs = dat$Sightings,
+                         surv = dat$Survey,
+                         ncores = 1,
+                         sdm.fun = glm,
+                         nbackground = 2000,
+                         family = binomial
+)
 
 ## If we wanted to provide our own background data, we would provide the indices
-bgsites <- sample(as.data.frame(dat$Environment)$index, 2000)
+## For instance with target-group background sampling
+bgsites <- tgb_sample(obs = dat$Sightings, nbackground = 2000)
 model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
-                            Environment3 + Environment4,
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        surv = dat$Survey,
-                        ncores = 1,
-                        sdm.fun = glm,
-                        background = bgsites,
-                        family = binomial
-                    )
+                           Environment3 + Environment4,
+                         data = dat$Environment,
+                         obs = dat$Sightings,
+                         surv = dat$Survey,
+                         ncores = 1,
+                         sdm.fun = glm,
+                         background = bgsites,
+                         family = binomial
+)
 
 ## Fit BaK using the presence-only model (`model.so`)
 ## Generate survey data (this seems a bit out of sorts..
@@ -101,22 +102,22 @@ model_s2bak <- combine.s2bak(model_so, model_s2, model_bak)
 ## All of the above is done step-by-step, but we can do all of it using
 ## `s2bak.S2BaK`, which calls fits the sightings-only and S2 SDMs as well as BaK
 model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
-                                Environment3 + Environment4,
-                            data = dat$Environment,
-                            obs = dat$Sightings,
-                            surv = dat$Survey,
-                            trait = dat$Trait,
-                            background = NA,
-                            sdm.fun = glm,
-                            predict.fun = predict.glm,
-                            overlapBackground = TRUE,
-                            nbackground = 2000,
-                            addSurvey = TRUE,
-                            ncores = 1,
-                            readout = NA,
-                            version = "full",
-                            family = binomial
-                        )
+                            Environment3 + Environment4,
+                          data = dat$Environment,
+                          obs = dat$Sightings,
+                          surv = dat$Survey,
+                          trait = dat$Trait,
+                          background = NA,
+                          sdm.fun = glm,
+                          predict.fun = predict.glm,
+                          overlapBackground = TRUE,
+                          nbackground = 2000,
+                          addSurvey = TRUE,
+                          ncores = 1,
+                          readout = NA,
+                          version = "full",
+                          family = binomial
+)
 
 ## We can compare the predictive results of BaK vs S2 vs SO for survey species
 all_predictions <- predict()
@@ -128,42 +129,42 @@ newdir <- tempfile(pattern = "so", tmpdir = ".")
 dir.create(newdir)
 print(newdir)
 model_so <- fit.so(pa ~ Environment1 + Environment2 +
-                        Environment3 + Environment4,
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        ncores = 1,
-                        sdm.fun = glm,
-                        nbackground = 2000,
-                        readout = newdir,
-                        version = "short",
-                        family = binomial
-                    )
+                     Environment3 + Environment4,
+                   data = dat$Environment,
+                   obs = dat$Sightings,
+                   ncores = 1,
+                   sdm.fun = glm,
+                   nbackground = 2000,
+                   readout = newdir,
+                   version = "short",
+                   family = binomial
+)
 
 ## Predictions can still be made in this way, using the same object
 ## useReadout forces files to be read
 so_preds <- predict.s2bak.SOS2(model_so, surv_env,
-                                predict.fun = predict.glm,
-                                ncores = 1, useReadout = TRUE)
+                               predict.fun = predict.glm,
+                               ncores = 1, useReadout = TRUE)
 
 #### ETC ####
 
 # For within-function testing purposes
 if (0) {
-    formula <- pa ~ Environment1 + Environment2 +
-                    Environment3 + Environment4
-    data <- dat$Environment
-    obs <- dat$Sightings
-    surv <- dat$Survey
-    trait <- dat$Trait
-    background <- NA
-    sdm.fun <- glm
-    predict.fun <- predict.glm
-    overlapBackground <- TRUE
-    nbackground <- 2000
-    addSurvey <- TRUE
-    ncores <- 1
-    readout <- NA
-    version <- "full"
-    ### Although this won't work with `...`
-    family <- binomial
+  formula <- pa ~ Environment1 + Environment2 +
+    Environment3 + Environment4
+  data <- dat$Environment
+  obs <- dat$Sightings
+  surv <- dat$Survey
+  trait <- dat$Trait
+  background <- NA
+  sdm.fun <- glm
+  predict.fun <- predict.glm
+  overlapBackground <- TRUE
+  nbackground <- 2000
+  addSurvey <- TRUE
+  ncores <- 1
+  readout <- NA
+  version <- "full"
+  ### Although this won't work with `...`
+  family <- binomial
 }

@@ -19,7 +19,7 @@
 #' the number of presences is less than the minimum.
 #'
 #' @examples
-#' ## See ?s2bak
+#' ## See ?fit.s2bak
 #'
 #' @return a list with a data.frame of the environment for each site, a
 #' data.frame of species traits, a data.frame of species sightings, and
@@ -31,11 +31,11 @@ s2bakSim <- function(species = 30, sites = 3000, surv = 300,
                      max.iter = 100) {
   if (length(env.prob) != 2 || length(trait.prob) != 2) {
     stop(paste("Invalid range for probabilities.",
-    "Ensure that two numeric values are provided."))
+               "Ensure that two numeric values are provided."))
   }
   if (surv > sites) {
     stop(paste("Number of survey sites exceeds total number of sites:",
-    "surv must be less than sites"))
+               "surv must be less than sites"))
   }
 
   # Ensure that minimum is the first index and maximum is the second
@@ -77,18 +77,18 @@ s2bakSim <- function(species = 30, sites = 3000, surv = 300,
 
       # Probability of detection based on environments 1 and 3
       p_d_e <- (env.prob[2] - env.prob[1]) *
-                dnorm(dst(envs[[1]], envs[[3]])) /
-                dnorm(0) + env.prob[1]
+        dnorm(dst(envs[[1]], envs[[3]])) /
+        dnorm(0) + env.prob[1]
 
       # Probability of detection based on traits
       p_d_t <- (trait.prob[2] - trait.prob[1]) *
-                dnorm(dst(traits[1], unk_traits[2])) /
-                dnorm(0) + trait.prob[1]
+        dnorm(dst(traits[1], unk_traits[2])) /
+        dnorm(0) + trait.prob[1]
 
       # Probability of establishment based on environment 1 and 2
       # p_e maximum value is always 1, may want to relax that later
       p_e <- dnorm(dst(envs[[1]] - m[1], envs[[2]] - m[2]), sd = sdv) /
-              dnorm(0, sd = sdv)
+        dnorm(0, sd = sdv)
 
       # Generate binary based on probability of establishment
       # Therefore the 'true' presence-absence

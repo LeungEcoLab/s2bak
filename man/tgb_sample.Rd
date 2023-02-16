@@ -26,13 +26,9 @@ This function samples background sites used in species
 distribution modelling (SDM), using the target-group background (TGB)
 sampling method.
 
-Sites within the species observations, weighted by the number of sightins
-in \code{obs}.
-
-without sightings will be excluded from sampling.
+Sites are sampled, weighted by the number of sightings found in \code{obs}.
 }
 \examples{
-## WIP ##
-## But here we would generate data, sample background sites then fit model
+## See ?fit.s2bak
 
 }

@@ -12,7 +12,7 @@
 \method{predict}{s2bak.s2}(
   model,
   newdata,
-  predict.fun = predict.gam,
+  predict.fun = predict.glm,
   useReadout = FALSE,
   ncores = 1,
   ...
@@ -21,7 +21,7 @@
 \method{predict}{s2bak.so}(
   model,
   newdata,
-  predict.fun = predict.gam,
+  predict.fun = predict.glm,
   useReadout = FALSE,
   ncores = 1,
   ...
@@ -31,7 +31,7 @@
   model,
   newdata,
   trait = NA,
-  predict.fun = predict.gam,
+  predict.fun = predict.glm,
   ncores = 1,
   useReadout = FALSE,
   ...

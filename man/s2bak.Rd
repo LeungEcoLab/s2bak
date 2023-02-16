@@ -15,7 +15,7 @@ fit.s2bak.s2(
   obs,
   surv = NA,
   background = NA,
-  sdm.fun = gam,
+  sdm.fun = glm,
   overlapBackground = TRUE,
   nbackground = 10000,
   addSurvey = TRUE,
@@ -30,7 +30,7 @@ fit.s2bak.so(
   data,
   obs,
   background = NA,
-  sdm.fun = gam,
+  sdm.fun = glm,
   overlapBackground = TRUE,
   nbackground = 10000,
   ncores = 1,
@@ -48,8 +48,8 @@ fit.s2bak(
   surv,
   trait,
   background = NA,
-  sdm.fun = gam,
-  predict.fun = predict.gam,
+  sdm.fun = glm,
+  predict.fun = predict.glm,
   overlapBackground = TRUE,
   nbackground = 10000,
   addSurvey = TRUE,
@@ -88,7 +88,7 @@ sample 'nbackground' sites, with or without overlap ('overlapBackground').
 Currently, only one set of background sites can be used.}
 
 \item{sdm.fun}{Model (as function) used for fitting (the default is
-\link[mgcv]{gam} from the mgcv package). The function must have the formula
+\link[stats]{glm}). The function must have the formula
 as their first argument, and 'data' as the parameter for the dataset
 (including presences and background sites within the data.frame).}
 

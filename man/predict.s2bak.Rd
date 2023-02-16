@@ -73,21 +73,20 @@ Model predictions as a data.frame with columns for each species and
 rows for each location
 }
 \description{
-Make model adjustments using the output from the BaK output,
-requiring trait, environmental data and SO predictions.
+When using a fitted s2bak.bak model, adjustments are made using
+trait, environmental data and sightings-only (\link[s2bak]{s2bak.so})
+predictions.
 
-The function automatically detects which model class is used,
-which can be either the output from fit.s2bak.so or fit.s2bak.s2.
-
+The function automatically detects which model class is used.
 \link[s2bak]{predict.s2bak.so} is a wrapper function that
 detects the class of the inputed model and makes the appropriate prediction.
 
-If the provided model is class s2bak.s2 or s2bak.so, predictions will be made
-using \link[s2bak]{predict.s2bak.s2}. If an SO model with BaK is provided
-(that is, an S2BaK class model with S2 = NULL, for example through combine
-without a provided S2), the functions returns adjusted predictions
-requiring trait data for the species. If the full S2BaK model (SO, S2 and
-BaK are provided), the function will make predictions with S2 for species
-with sightings and survey data, and adjusted predictions using SO and BaK
-for species without survey data.
+If the provided model is class s2bak.s2 or s2bak.so,
+predictions will be made using \link[s2bak]{predict.s2bak.s2}. If an SO
+model with BaK is provided (that is, an S2BaK class model with S2 = NULL,
+for example through combine without a provided S2), the functions returns
+adjusted predictions requiring trait data for the species. If the full
+S2BaK model (SO, S2 and BaK are provided), the function will make predictions
+with S2 for species with sightings and survey data, and adjusted
+predictions using SO and BaK for species without survey data.
 }

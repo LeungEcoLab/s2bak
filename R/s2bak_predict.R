@@ -1,7 +1,8 @@
 #' @title Make predictions using fitted SO, S2, BaK or S2BaK class models
 #'
-#' @description Make model adjustments using the output from the BaK output,
-#' requiring trait, environmental data and SO predictions.
+#' @description When using a fitted s2bak.bak model, adjustments are made using
+#' trait, environmental data and sightings-only (\link[s2bak]{s2bak.so})
+#' predictions.
 #'
 #' @param predictions Sightings-only predictions as a matrix or data.frame with
 #' rows as sites and columns as species. Assumes as type="response", and rows of
@@ -13,7 +14,7 @@
 #' @return Model predictions but with adjustments made by the BaK model.
 #' Note the default right now is type="response"
 #' @rdname predict.s2bak
-#' @export
+#' @export predict.s2bak.bak
 predict.s2bak.bak <- function(predictions, bak, trait, data) {
   predictions <- as.matrix(predictions)
   rownames(predictions) <- 1:nrow(predictions)
@@ -45,13 +46,15 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
   return(predictions2)
 }
 
-#' @description The function automatically detects which model class is used,
-#' which can be either the output from fit.s2bak.so or fit.s2bak.s2.
+#' @description The function automatically detects which model class is used.
+#' \link[s2bak]{predict.s2bak.so} is a wrapper function that
+#' detects the class of the inputed model and makes the appropriate prediction.
 #'
-#' @param model Fitted SO or S2 models of class `s2bak.so` or `s2bak.s2` to
-#' use for prediction. If the object does
-#' not have stored SDMs, it will check to see if there is readout
-#' (alternatively, a readout can be forced with useReadout = T).
+#' @param model Models of class `s2bak.so` or `s2bak.s2` can
+#' be used to make predictions for each species fitted.
+#' If the object does not have stored SDMs, it will check to see if there
+#' is readout (alternatively, a readout can be forced with useReadout = T).
+#'
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used
@@ -67,7 +70,7 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 #' @return Generates a matrix of predictions with rows being indices in the
 #' data.frame, and columns representing each species.
 #' @rdname predict.s2bak
-#' @export
+#' @export predict.s2bak.s2
 predict.s2bak.s2 <- function(model,
                                 newdata,
                                 predict.fun = predict.gam,
@@ -156,7 +159,7 @@ predict.s2bak.s2 <- function(model,
 }
 
 #' @rdname predict.s2bak
-#' @export
+#' @export predict.s2bak.so
 predict.s2bak.so <- function(model,
                         newdata,
                         predict.fun = predict.gam,
@@ -171,17 +174,14 @@ predict.s2bak.so <- function(model,
   ))
 }
 
-#' @description \link[s2bak]{predict.s2bak.so} is a wrapper function that
-#' detects the class of the inputed model and makes the appropriate prediction.
-#'
-#' If the provided model is class s2bak.s2 or s2bak.so, predictions will be made
-#' using \link[s2bak]{predict.s2bak.s2}. If an SO model with BaK is provided
-#' (that is, an S2BaK class model with S2 = NULL, for example through combine
-#' without a provided S2), the functions returns adjusted predictions
-#' requiring trait data for the species. If the full S2BaK model (SO, S2 and
-#' BaK are provided), the function will make predictions with S2 for species
-#' with sightings and survey data, and adjusted predictions using SO and BaK
-#' for species without survey data.
+#' @description If the provided model is class s2bak.s2 or s2bak.so,
+#' predictions will be made using \link[s2bak]{predict.s2bak.s2}. If an SO
+#'  model with BaK is provided (that is, an S2BaK class model with S2 = NULL,
+#' for example through combine without a provided S2), the functions returns
+#' adjusted predictions requiring trait data for the species. If the full
+#' S2BaK model (SO, S2 and BaK are provided), the function will make predictions
+#' with S2 for species with sightings and survey data, and adjusted
+#' predictions using SO and BaK for species without survey data.
 #'
 #' @param model Outputted model from fit.s2bak.so, fit.s2bak.s2, fit.s2bak or
 #' s2bak.combine.
@@ -194,7 +194,7 @@ predict.s2bak.so <- function(model,
 #' @return Model predictions as a data.frame with columns for each species and
 #' rows for each location
 #' @rdname predict.s2bak
-#' @export
+#' @export predict.s2bak
 predict.s2bak <- function(model,
                           newdata,
                           trait = NA,
@@ -245,6 +245,6 @@ predict.s2bak <- function(model,
     out <- out[, speciesList]
     return(out)
   } else {
-    stop("Invalid class: requires s2bak, s2bak.so or s2bak.s2.")
+    stop("Invalid class: requires object of class s2bak, s2bak.so or s2bak.s2.")
   }
 }

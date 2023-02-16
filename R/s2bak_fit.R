@@ -43,7 +43,7 @@
 #' sample 'nbackground' sites, with or without overlap ('overlapBackground').
 #' Currently, only one set of background sites can be used.
 #' @param sdm.fun Model (as function) used for fitting (the default is
-#' \link[mgcv]{gam} from the mgcv package). The function must have the formula
+#' \link[stats]{glm}). The function must have the formula
 #' as their first argument, and 'data' as the parameter for the dataset
 #' (including presences and background sites within the data.frame).
 #' @param overlapBackground Whether sampled background sites that overlap with
@@ -78,7 +78,7 @@
 #' @rdname s2bak
 #' @export
 fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
-                     sdm.fun = gam, overlapBackground = TRUE,
+                     sdm.fun = glm, overlapBackground = TRUE,
                      nbackground = 10000,
                      addSurvey = TRUE,
                      ncores = 1,
@@ -325,7 +325,7 @@ fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
 #' @rdname s2bak
 #' @export
 fit.s2bak.so <- function(formula, data, obs, background = NA,
-                     sdm.fun = gam, overlapBackground = TRUE,
+                     sdm.fun = glm, overlapBackground = TRUE,
                      nbackground = 10000,
                      ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
@@ -505,8 +505,8 @@ fit.s2bak.bak <- function(predictions, surv, data, trait) {
 #' @rdname s2bak
 #' @export
 fit.s2bak <- function(formula, data, obs, surv, trait,
-                        background = NA, sdm.fun = gam,
-                        predict.fun = predict.gam,
+                        background = NA, sdm.fun = glm,
+                        predict.fun = predict.glm,
                         overlapBackground = TRUE, nbackground = 10000,
                         addSurvey = TRUE,
                         ncores = 1,

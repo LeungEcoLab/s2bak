@@ -58,7 +58,7 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used
-#' is predict.gam from the mgcv package. Functions have the structure of model
+#' is \link[stats]{predict.glm}. Functions have the structure of model
 #' and newdata as the first and second arguments, respectively.
 #' @param useReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
@@ -73,7 +73,7 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 #' @export predict.s2bak.s2
 predict.s2bak.s2 <- function(model,
                                 newdata,
-                                predict.fun = predict.gam,
+                                predict.fun = predict.glm,
                                 useReadout = FALSE,
                                 ncores = 1, ...) {
   cat("Predicting of class", class(model), "\n")
@@ -162,7 +162,7 @@ predict.s2bak.s2 <- function(model,
 #' @export predict.s2bak.so
 predict.s2bak.so <- function(model,
                         newdata,
-                        predict.fun = predict.gam,
+                        predict.fun = predict.glm,
                         useReadout = FALSE,
                         ncores = 1, ...) {
   return(predict.s2bak.s2(
@@ -198,7 +198,7 @@ predict.s2bak.so <- function(model,
 predict.s2bak <- function(model,
                           newdata,
                           trait = NA,
-                          predict.fun = predict.gam,
+                          predict.fun = predict.glm,
                           ncores = 1,
                           useReadout = FALSE,
                           ...) {

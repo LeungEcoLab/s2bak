@@ -30,7 +30,19 @@ dat$Survey <- dat$Survey[, c(1, sample(2:11, 10))]
 ## `s2bakSim` produces a smaller dataset, so we reduce `nbackground`
 ## Note that in this instance, background site indices are not provided,
 ## so they are randomly sampled from `data`
-model_so <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
+model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
+                            Environment3 + Environment4,
+                        data = dat$Environment,
+                        obs = dat$Sightings,
+                        ncores = 1,
+                        sdm.fun = glm,
+                        nbackground = 2000,
+                        family = binomial
+                    )
+
+## We can also fit models using GAM
+library(mgcv)
+model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
                             s(Environment3) + s(Environment4),
                         data = dat$Environment,
                         obs = dat$Sightings,
@@ -39,17 +51,6 @@ model_so <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
                         nbackground = 2000,
                         method = "GCV.Cp",
                         select = TRUE,
-                        family = binomial
-                    )
-
-## We can also do this using GLM
-model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
-                            Environment3 + Environment4,
-                        data = dat$Environment,
-                        obs = dat$Sightings,
-                        ncores = 1,
-                        sdm.fun = glm,
-                        nbackground = 2000,
                         family = binomial
                     )
 
@@ -85,9 +86,9 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
 surv_env <- as.data.frame(dat$Environment[dat$Survey[, 1], ])
 ## Generate predictions on survey sites
 ## `predict` here is equivalent to `predict.s2bak.so`
-so_preds <- predict.s2bak.so(model_so, surv_env,
-                        predict.fun = predict.glm,
-                        ncores = 1, type = "response")
+so_preds <- predict(model_so, surv_env,
+                    predict.fun = predict.glm,
+                    ncores = 1, type = "response")
 
 ## Fit BaK using survey predictions generated from sightings-only model
 ## This is super unintuitive...
@@ -118,8 +119,7 @@ model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                         )
 
 ## We can compare the predictive results of BaK vs S2 vs SO for survey species
-#### WIP ###
-all_predictions <- predict.s2bak()
+all_predictions <- predict()
 
 ## If memory issues arise, we can output the fitted models to file instead
 ## We can also specify "short" output for this reason

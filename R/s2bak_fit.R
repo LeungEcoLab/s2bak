@@ -32,7 +32,7 @@
 #' representing a given species presence (1) or absence (0). It will add the an
 #' additional binary predictor to the formula(s), "so", which denotes
 #' sightings-only or not. If 'so' is already in formula (e.g. if modifying
-#' the variable in any way, then set surv.formula = FALSE). If left as NA,
+#' the variable in any way, then set addSurvey = FALSE). If left as NA,
 #' it will fit the SDMs as presence-only models with the function of choice.
 #' NOTE: Assumes all species are provided in the survey data, and that they are
 #' surveyed over the same sites (i.e. matrix-type).
@@ -40,22 +40,22 @@
 #' presence-only model, provided as a vector of indices of data (following the
 #' same column name as observations). If the index column name is not found in
 #' 'data', it assumes row number within 'data'. If left as NA, it will randomly
-#' sample 'nbackground' sites, with or without overlap ('overlapbackground').
+#' sample 'nbackground' sites, with or without overlap ('overlapBackground').
 #' Currently, only one set of background sites can be used.
 #' @param sdm.fun Model (as function) used for fitting (the default is
 #' \link[mgcv]{gam} from the mgcv package). The function must have the formula
 #' as their first argument, and 'data' as the parameter for the dataset
 #' (including presences and background sites within the data.frame).
-#' @param overlapbackground Whether sampled background sites that overlap with
+#' @param overlapBackground Whether sampled background sites that overlap with
 #' observations should be included. By default, it allows overlap. If FALSE,
 #' number of background sites may be less than specified or provided.
 #' @param nbackground Number of background sites to sample. Only applies
 #' if background = NA.
-#' @param surv.formula Whether the binary variable 'so', denoting whether sites
-#' are sightings-only or survey, should be added to the formula(s). If survey
+#' @param addSurvey Whether the binary variable 'so' should be added to the
+#' formula(s), denoting whether sites are sightings-only or survey. If survey
 #' data is not provided, then 'so' will not be added to the formula(s)
 #' regardless of whether it is TRUE or FALSE. If there is survey data and
-#' surv.formula = FALSE, then 'so' will not be added, and must be included in
+#' addSurvey = FALSE, then 'so' will not be added, and must be included in
 #' the initial function call (or it will throw an error).
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
 #' automatically set if ncores=NA. If ncores > number of available cores - 1,
@@ -78,9 +78,9 @@
 #' @rdname s2bak
 #' @export
 s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
-                     sdm.fun = gam, overlapbackground = TRUE, 
+                     sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
-                     surv.formula = TRUE,
+                     addSurvey = TRUE,
                      ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
   # Set cores
@@ -107,22 +107,22 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   mode <- ifelse(all(is.na(surv)), "s2bak.SO", "s2bak.S2")
 
   # Get the list of species in the data
-  totalspecies <- as.character(unique(obs$species))
+  speciesListFull <- as.character(unique(obs$species))
   if (mode == "s2bak.SO") {
-    specieslist <- totalspecies
+    speciesList <- speciesListFull
   } else if(mode == "s2bak.S2") {
-    specieslist <- colnames(surv)
+    speciesList <- colnames(surv)
     ## Assumes that if ind is NA, remove first entry (index)
     ## Otherwise remove whatever has the value of `ind`
     if (is.na(ind)) {
-      specieslist <- specieslist[-1]
+      speciesList <- speciesList[-1]
     }else{
-      specieslist <- specieslist[-which(specieslist == ind)]
+      speciesList <- speciesList[-which(speciesList == ind)]
     }
   }
   cat("Fitting", mode, "model for",
-      length(specieslist), "out of",
-      length(totalspecies), "species\n")
+      length(speciesList), "out of",
+      length(speciesListFull), "species\n")
   cat(ncores, "core(s)\n")
 
   # Add / if not there
@@ -138,7 +138,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   } else if (typeof(formula) == "list") {
     # Multiple formulas, but we still need to check if all species are there
     flong <- TRUE
-    if (!all(specieslist %in% names(formula))) {
+    if (!all(speciesList %in% names(formula))) {
       stop(cat("Incorrect formula type.",
       "Please provide a single formula or a list of formulas with each",
       "index named after the corresponding species."))
@@ -152,7 +152,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   # Saves the species list and functions used for fitting/predicting
   # Also save the arguments
   l <- list(
-    species.list = specieslist,
+    speciesList = speciesList,
     options = list(
       call = formula,
       functions = list(
@@ -160,7 +160,7 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       ),
       version = version,
       readout = readout,
-      overlapbackground = overlapbackground
+      overlapBackground = overlapBackground
     )
   )
 
@@ -199,18 +199,18 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
   # get response variable name
   yy <- as.character(ifelse(flong, formula[[1]][[2]], formula[[2]]))
 
-  # Add 'so' if we have survey data and surv.formula = TRUE
-  if (!all(is.na(surv)) & surv.formula) {
+  # Add 'so' if we have survey data and addSurvey = TRUE
+  if (!all(is.na(surv)) & addSurvey) {
     formula <- s2bak.addPred(formula)
   }
 
   # Fit SDM for each species
   # Saves output of each one as well
-  l$sdm <- foreach(i = specieslist) %dopar% {
+  l$sdm <- foreach(i = speciesList) %dopar% {
     # Generate fitting data using 'data', 'obs' and 'background'
-    # If overlapbackground == FALSE, remove overlaps
-    if (!overlapbackground) {
-      background <- background[!(background %in% obs[obs$species == i, 
+    # If overlapBackground == FALSE, remove overlaps
+    if (!overlapBackground) {
+      background <- background[!(background %in% obs[obs$species == i,
                                   which(colnames(obs) != "species")])]
     }
     # Get the list of indices
@@ -286,11 +286,11 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
       stop("Invalid version. Please specify either 'long' or 'short'")
     }
   }
-  names(l$sdm) <- specieslist
+  names(l$sdm) <- speciesList
 
   wh <- which(unlist(lapply(l$sdm, is.null)))
   if (length(wh) > 0) {
-    l$failure <- specieslist[wh]
+    l$failure <- speciesList[wh]
   } else {
     l$failure <- NULL
   }
@@ -304,8 +304,8 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 
   # Save options one last time, logging the filenames
   if (!is.na(readout)) {
-    lf <- paste0(readout, gsub("\\s+", "_", specieslist), "-", class(l), ".rds")
-    names(lf) <- specieslist
+    lf <- paste0(readout, gsub("\\s+", "_", speciesList), "-", class(l), ".rds")
+    names(lf) <- speciesList
     # Don't include options in the output list of files
     l$options$readout <- lf
     # Save opts one more time
@@ -325,15 +325,15 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 #' @rdname s2bak
 #' @export
 s2bak.SO <- function(formula, data, obs, background = NA,
-                     sdm.fun = gam, overlapbackground = TRUE,
+                     sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
                      ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
   return(s2bak.S2(formula, data, obs,
     surv = NA, background = background,
     sdm.fun = sdm.fun,
-    overlapbackground = overlapbackground, nbackground = nbackground,
-    ncores = ncores, surv.formula = TRUE,
+    overlapBackground = overlapBackground, nbackground = nbackground,
+    ncores = ncores, addSurvey = TRUE,
     readout = readout, version = version, ...
   ))
 }
@@ -373,17 +373,17 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
                   "not excluded from the fitting:", colnames(surv)[wh]))
     surv <- surv[, -wh]
   }
-  specieslist <- colnames(surv)[-1]
+  speciesList <- colnames(surv)[-1]
 
   # Model outputs
   out <- list(
-    species.list = specieslist,
-    fullspecies = unique(trait$species)
+    speciesList = speciesList,
+    speciesListFull = unique(trait$species)
   )
   class(out) <- "s2bak.BaK"
 
-  cat("Fitting bias adjustment kernel on", length(specieslist),
-  "survey species and", length(out$fullspecies), "species total.\n")
+  cat("Fitting bias adjustment kernel on", length(speciesList),
+  "survey species and", length(out$speciesListFull), "species total.\n")
 
   # Throw error if predictions, surv and data are not aligned
   if (length(unique(c(nrow(predictions), nrow(data), nrow(surv)))) > 1) {
@@ -392,7 +392,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
   }
 
   # Throw error if species missing from traits data.frame
-  if (!all(specieslist %in% trait$species) | !all(specieslist %in% colnames(predictions))) {
+  if (!all(speciesList %in% c(trait$species, colnames(predictions)))) {
     stop("Species missing from trait data.")
   }
 
@@ -427,35 +427,40 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
   fit_l$lr <- log((fit_l$pa + 1) / (fit_l$so_only + 1))
 
   # Species biases, based on traits for survey species
-  trait2 <- trait[match(specieslist, trait$species), ]
-  fit_sp <- data.frame(species = specieslist, stringsAsFactors = FALSE)
+  trait2 <- trait[match(speciesList, trait$species), ]
+  fit_sp <- data.frame(species = speciesList, stringsAsFactors = FALSE)
   fit_sp <- cbind(fit_sp, trait2[, -which(colnames(trait2) == "species")])
   for (i in 1:nrow(fit_sp)) {
     ## Does this work? Should we just assume that this is provided
     #### TBD ####
     wh <- which(is.na(fit_sp[i, ]))
     if (length(wh) > 0) {
-      warning("Missing trait data, which were imputated using mean of the column.")
+      warning(cat("Missing trait data, which were imputated",
+                  "using mean of the column."))
       fit_sp[i, wh] <- msd[colnames(wh)]
     }
   }
 
   # Get summed predictions
-  fit_sp$so_only <- apply(predictions[, specieslist], 2, sum, na.rm = TRUE)
+  fit_sp$so_only <- apply(predictions[, speciesList], 2, sum, na.rm = TRUE)
   # Get summed occurrences
-  fit_sp$pa <- apply(surv[, specieslist], 2, sum, na.rm = TRUE)
+  fit_sp$pa <- apply(surv[, speciesList], 2, sum, na.rm = TRUE)
   # Get log-ratio
   fit_sp$lr <- log((fit_sp$pa + 1) / (fit_sp$so_only + 1))
 
   out$bak <- list()
   # Fit bias kernels
-  out$bak$bias_loc <- glm(formula(paste("lr ~", paste(names_xbe, collapse = "+"))), data = fit_l)
-  out$bak$bias_sp <- glm(formula(paste("lr ~", paste(names_xbt, collapse = "+"))), data = fit_sp)
+  out$bak$bias_loc <- glm(formula(
+                            paste("lr ~", paste(names_xbe, collapse = "+"))),
+                          data = fit_l)
+  out$bak$bias_sp <- glm(formula(
+                            paste("lr ~", paste(names_xbt, collapse = "+"))),
+                          data = fit_sp)
 
   # Generate the final data.frame to model bias adjustment (based on mk_bak)
   # Include all species, beyond just the ones found in the survey
   trait$pred <- predict(out$bak$bias_sp, trait)
-  fit_adj <- lapply(specieslist, FUN = function(x) {
+  fit_adj <- lapply(speciesList, FUN = function(x) {
     ddf <- data.frame(
       loc = 1:nrow(data), species = x, pa = 0,
       zso_only = NA, scale_so_l = NA, scale_so_sp = NA,
@@ -468,7 +473,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
                                     (1 - predictions[, x]) /
                                     predictions[, x]
                                   ))
-                            ), 
+                            ),
                             -15,
                             15
                           )
@@ -479,7 +484,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
   fit_adj <- do.call(rbind, fit_adj)
 
   # Fit bias adjustment model
-  out$bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l, 
+  out$bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l,
                           family = "binomial", data = fit_adj)
 
   return(out)
@@ -502,8 +507,8 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
 s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                         background = NA, sdm.fun = gam,
                         predict.fun = predict.gam,
-                        overlapbackground = TRUE, nbackground = 10000,
-                        surv.formula = TRUE,
+                        overlapBackground = TRUE, nbackground = 10000,
+                        addSurvey = TRUE,
                         ncores = 1,
                         readout = NA, version = c("full", "short")[1], ...) {
   # Output for s2bak.S2BaK
@@ -524,7 +529,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   ## First, fit SO model
   out$s2bak.SO <- s2bak.SO(formula = formula, data = data, obs = obs,
                             background = background, sdm.fun = sdm.fun,
-                            overlapbackground = overlapbackground,
+                            overlapBackground = overlapBackground,
                             nbackground = nbackground, ncores = ncores,
                             readout = readout, version = version, ...)
 
@@ -537,9 +542,9 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                             surv = surv,
                             background = background,
                             sdm.fun = sdm.fun,
-                            overlapbackground = overlapbackground,
+                            overlapBackground = overlapBackground,
                             nbackground = nbackground,
-                            surv.formula = surv.formula,
+                            addSurvey = addSurvey,
                             ncores = ncores, readout = readout,
                             version = version, ...)
 
@@ -558,7 +563,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
   predictions <- s2bak.predict.SOS2(out$s2bak.SO, surv_dat,
                                       predict.fun = predict.fun,
-                                      doReadout = !is.na(readout),
+                                      useReadout = !is.na(readout),
                                       ncores = ncores, type = "response")
 
   out$s2bak.BaK <- s2bak.BaK(predictions, surv, surv_dat, trait)

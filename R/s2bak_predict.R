@@ -34,12 +34,12 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
         15
       )
 
-  predictions2$pred.out <- predict(bak$bak$bias_adj,
+  predictions2$pred_out <- predict(bak$bak$bias_adj,
                                     predictions2,
                                     type = "response")
 
   # Convert back to wide format
-  predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred.out")
+  predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred_out")
   predictions2 <- predictions2[, -which(colnames(predictions2) == "loc")]
 
   return(predictions2)
@@ -53,7 +53,7 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' @param model Fitted SO or S2 models of class `s2bak.SO` or `s2bak.S2` to
 #' use for prediction. If the object does
 #' not have stored SDMs, it will check to see if there is readout
-#' (alternatively, you could force readout with doReadout = T).
+#' (alternatively, you could force readout with useReadout = T).
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used
@@ -62,7 +62,7 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' @param class Whether we're dealing with SO or S2 models, which is only used
 #' when providing a directory so we can identify which class
 #' we are interested in.
-#' @param doReadout logical; if TRUE will do readout over stored SDMs.
+#' @param useReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
 #' automatically set if ncores=NA. If ncores > number of available cores - 1,
@@ -76,7 +76,7 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 s2bak.predict.SOS2 <- function(model,
                                 newdata,
                                 predict.fun = predict.gam,
-                                doReadout = FALSE,
+                                useReadout = FALSE,
                                 ncores = 1, ...) {
   cat("Predicting of class", class(model), "\n")
 
@@ -98,10 +98,10 @@ s2bak.predict.SOS2 <- function(model,
   newdata$so <- 0
 
   # Get whether we are dealing with a readout or model
-  if (!is.null(model$sdm) & !doReadout) {
+  if (!is.null(model$sdm) & !useReadout) {
     cat("Reading models from argument\n")
     dir <- FALSE
-  } else if (doReadout | !is.null(model$options$readout)) {
+  } else if (useReadout | !is.null(model$options$readout)) {
     cat("Reading models from directory\n")
     dir <- TRUE
 
@@ -113,15 +113,15 @@ s2bak.predict.SOS2 <- function(model,
   }
 
   # Get length of species
-  specieslist <- model$species.list
+  speciesList <- model$speciesList
 
-  tmp <- as.data.frame(matrix( 
+  tmp <- as.data.frame(matrix(
                               NA,
                               nrow = nrow(newdata),
-                              ncol = length(specieslist)
+                              ncol = length(speciesList)
                             ))
-  names(tmp) <- specieslist
-  tmp[] <- foreach(i = specieslist) %dopar% {
+  names(tmp) <- speciesList
+  tmp[] <- foreach(i = speciesList) %dopar% {
     if (dir) {
       # Read in appropriate model, whose filename
       # should be found in l$options$readout
@@ -153,7 +153,7 @@ s2bak.predict.SOS2 <- function(model,
   if (any(failed)) {
     warning(paste(
       "Failed to predict for the following species:",
-      paste(specieslist[failed], collapse = ", ")
+      paste(speciesList[failed], collapse = ", ")
     ))
   }
 
@@ -179,7 +179,7 @@ s2bak.predict.SOS2 <- function(model,
 #' @param newdata Environmental data to predict
 #' @param trait Trait data, optional if model is S2 or SO
 #' @param predict.fun prediction function for SDM (for S2 and SO)
-#' @param doReadout Whether to force doReadout in SOS2
+#' @param useReadout Whether to force useReadout in SOS2
 #' @param ncores Paralellize SO/S2 predictions, if NA then auto-pick it
 #' @param ... Any additional arguments for the predict.fun
 #' @return Model predictions as a data.frame with columns for each species and
@@ -191,13 +191,13 @@ s2bak.predict <- function(model,
                           trait = NA,
                           predict.fun = predict.gam,
                           ncores = 1,
-                          doReadout = FALSE,
+                          useReadout = FALSE,
                           ...) {
   # Simplest cases, which require a call to s2bak.predict.SOS2
 
   if (class(model) == "s2bak.SO" | class(model) == "s2bak.S2") {
     return(s2bak.predict.SOS2(model, newdata, predict.fun,
-                              doReadout = doReadout,
+                              useReadout = useReadout,
                               ncores = ncores, ...))
   } else if (class(model) == "s2bak.S2BaK") {
     if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
@@ -206,33 +206,33 @@ s2bak.predict <- function(model,
     if (all(is.na(trait))) stop("Missing trait data for BaK prediction.")
     # Get species list, and identify which ones are S2 and with ones are SO-BaK
     # SO should contain all species
-    specieslist <- model$s2bak.SO$species.list
+    speciesList <- model$s2bak.SO$speciesList
 
     # Check if NULL
     if (!is.null(model$s2bak.S2)) {
-      specieslist.s2 <- model$s2bak.S2$species.list
-      specieslist.so <- specieslist[!(specieslist %in% specieslist.s2)]
+      speciesList.s2 <- model$s2bak.S2$speciesList
+      speciesList.so <- speciesList[!(speciesList %in% speciesList.s2)]
 
       # Make predictions for S2 species
       out.S2 <- s2bak.predict.SOS2(model = model$s2bak.S2, newdata = newdata,
                                     predict.fun = predict.fun,
-                                    doReadout = doReadout, ncores = ncores, ...)
+                                    useReadout = useReadout, ncores = ncores, ...)
     } else {
       # No S2, fit for all species
-      specieslist.so <- specieslist
+      speciesList.so <- speciesList
     }
 
     # Make predictions for SO species
     out.SO <- s2bak.predict.SOS2(model = model$s2bak.SO, newdata = newdata,
                                   predict.fun = predict.fun,
-                                  doReadout = doReadout, ncores = ncores, ...)
+                                  useReadout = useReadout, ncores = ncores, ...)
 
     # Make adjustment for SO species
     out.SO <- s2bak.predict.BaK(out.SO, model$s2bak.BaK, trait, newdata)
 
     # Combine and output
     out <- cbind(out.SO, out.S2)
-    out <- out[, specieslist]
+    out <- out[, speciesList]
     return(out)
   } else {
     stop("Invalid class: requires s2bak.SO, s2bak.S2 or s2bak.S2BaK.")

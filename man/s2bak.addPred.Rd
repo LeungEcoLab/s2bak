@@ -17,6 +17,6 @@ A formula with added predictor
 \description{
 Adds 'so' (or other specified predictor) to the formula as an
 additional predictor. The arugment 'formula' assumes the formula follows a
-"Y ~ X" format. The functino will not add the predictor if it is already
+"Y ~ X" format. The function will not add the predictor if it is already
 in the formula.
 }

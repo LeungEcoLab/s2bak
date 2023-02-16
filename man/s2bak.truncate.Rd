@@ -20,6 +20,6 @@ Truncated x values
 }
 \description{
 Truncate provided numerical values based on a defined minimum
-and maximum cutoff. Used in \link[s2bak]{s2bak.BaK} and
-\link[s2bak]{s2bak.predict.BaK}.
+and maximum cutoff. Used in \link[s2bak]{fit.bak} and
+\link[s2bak]{predict.bak}.
 }

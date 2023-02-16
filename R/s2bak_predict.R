@@ -1,4 +1,4 @@
-#' @title Predict with SO, S2, BaK and S2BaK Objects
+#' @title Make predictions using fitted SO, S2, BaK or S2BaK class models
 #'
 #' @description Make model adjustments using the output from the BaK output,
 #' requiring trait, environmental data and SO predictions.
@@ -45,23 +45,18 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
   return(predictions2)
 }
 
-#' @title Make predictions using fitted SO, S2, BaK or S2BaK class models
-#'
 #' @description The function automatically detects which model class is used,
 #' which can be either the output from fit.s2bak.so or fit.s2bak.s2.
 #'
 #' @param model Fitted SO or S2 models of class `s2bak.so` or `s2bak.s2` to
 #' use for prediction. If the object does
 #' not have stored SDMs, it will check to see if there is readout
-#' (alternatively, you could force readout with useReadout = T).
+#' (alternatively, a readout can be forced with useReadout = T).
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
 #' @param predict.fun Predict function linked to the SDM used. The default used
 #' is predict.gam from the mgcv package. Functions have the structure of model
 #' and newdata as the first and second arguments, respectively.
-#' @param class Whether we're dealing with SO or S2 models, which is only used
-#' when providing a directory so we can identify which class
-#' we are interested in.
 #' @param useReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
@@ -176,10 +171,8 @@ predict.s2bak.so <- function(model,
   ))
 }
 
-#' @title Predict with S2BaK objects
-#'
-#' @description Wrapper function that detects the class of the inputed model
-#' and makes the appropriate prediction.
+#' @description \link[s2bak]{predict.s2bak.so} is a wrapper function that
+#' detects the class of the inputed model and makes the appropriate prediction.
 #'
 #' If the provided model is class s2bak.s2 or s2bak.so, predictions will be made
 #' using \link[s2bak]{predict.s2bak.s2}. If an SO model with BaK is provided

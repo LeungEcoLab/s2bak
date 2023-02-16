@@ -5,7 +5,7 @@
 \alias{predict.s2bak.s2}
 \alias{predict.s2bak.so}
 \alias{predict.s2bak}
-\title{Predict with SO, S2, BaK and S2BaK Objects}
+\title{Make predictions using fitted SO, S2, BaK or S2BaK class models}
 \usage{
 \method{predict}{s2bak.bak}(predictions, bak, trait, data)
 
@@ -61,10 +61,6 @@ s2bak.combine.}
 \item{ncores}{Paralellize SO/S2 predictions, if NA then auto-pick it}
 
 \item{...}{Any additional arguments for the predict.fun}
-
-\item{class}{Whether we're dealing with SO or S2 models, which is only used
-when providing a directory so we can identify which class
-we are interested in.}
 }
 \value{
 Model predictions but with adjustments made by the BaK model.
@@ -83,8 +79,8 @@ requiring trait, environmental data and SO predictions.
 The function automatically detects which model class is used,
 which can be either the output from fit.s2bak.so or fit.s2bak.s2.
 
-Wrapper function that detects the class of the inputed model
-and makes the appropriate prediction.
+\link[s2bak]{predict.s2bak.so} is a wrapper function that
+detects the class of the inputed model and makes the appropriate prediction.
 
 If the provided model is class s2bak.s2 or s2bak.so, predictions will be made
 using \link[s2bak]{predict.s2bak.s2}. If an SO model with BaK is provided

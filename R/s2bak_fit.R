@@ -2,25 +2,25 @@
 #' @title Build sightings-only or S2 species distribution models for
 #' multiple species.
 #'
-#' @description fit.so function fits SDMs for each provided species within
+#' @description fit.s2bak.so function fits SDMs for each provided species within
 #' the same system, using a specified SDM approach (or the default which are
-#' GAMs from the mgcv package). Parallelisation is possible when processing each
+#' GAMs from the mgcv package). Parallelization is possible when processing each
 #' SDM, with the default being 1 core.
 #'
-#' The fit.s2 function fits SDMs using species sightings, background sites and
-#' survey sites, differentiating between them using a binary 'so' predictor,
-#' denoting sightings-only (1) or survey (0).
+#' The fit.s2bak.s2 function fits SDMs using species sightings,
+#' background sites and survey sites, differentiating between them using a
+#' binary 'so' predictor, denoting sightings-only (1) or survey (0).
 #'
 #' Saving SDMs to the output may be computationally intensive, particularly with
-#' large datasets and many species. To reduce the possibility of crashing,
+#' large datasets and many species. To reduce issues with memory,
 #' readout and the version = "short" may be used, which does not output the
 #' fitted models but instead saves it to the directory specified in readout.
 #'
-#' @param formula Formula for the SDMs, which serves as input for the given SDM.
-#' Assumes the structure follows "Y ~ X". Alternatively, a list of formulas can
-#' be provided with names corresponding to species. In this case, species
-#' will be fit using their corresponding formula. The response variable can
-#' have any name, as the function will detect it and name the columns
+#' @param formula Formula for the model functions.
+#' Assumes the structure follows "Y ~ X". Alternatively, a named list of
+#' formulas can be provided corresponding to species names.
+#' In this case, species will be fit using their corresponding formula.
+#' The response variable can have any name, as the function name the column
 #' accordingly.
 #' @param data Full environmental data used for fitting.
 #' @param obs Species observations as a data.frame, with a column for species
@@ -63,21 +63,21 @@
 #' @param readout Directory to save fitted SDMs and background sites. If NA, it
 #' will not save any SDMs. Provides an additional output that shows where the
 #' SDM is saved (with file name). The output in this directory can later be
-#' used in other functions such as \link[s2bak]{s2bak.predict.SOS2}.
+#' used in other functions such as \link[s2bak]{predict.s2bak.s2}.
 #' @param version Whether the SDMs should be included in the output. With
 #' "short", no the fitted SDMs are not provided. Setting to "full" (default)
 #' will output the list with all SDMs. Setting to "short" and combined with
 #' readout, can considerably reduce RAM usage while saving the progress so far,
 #' which is useful when dealing with many species or large datasets.
 #' @param ... Other arguments that are passed to the SDM function (sdm.fun).
-#' @return An object of class "s2bak.S2", providing fitted SDMs for each species
+#' @return An object of class "s2bak.s2", providing fitted SDMs for each species
 #' based on the provided SDM modelling approach. The primary difference between
 #' SO and S2 models are the additional data points from the survey data, and an
 #' additional binary predictor 'so' which denotes whether the data is from
 #' presence-background (1) or presence-absence data (0).
 #' @rdname s2bak
 #' @export
-fit.s2 <- function(formula, data, obs, surv = NA, background = NA,
+fit.s2bak.s2 <- function(formula, data, obs, surv = NA, background = NA,
                      sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
                      addSurvey = TRUE,
@@ -104,13 +104,13 @@ fit.s2 <- function(formula, data, obs, surv = NA, background = NA,
   }
 
   # Are we fitting SO or S2?
-  mode <- ifelse(all(is.na(surv)), "s2bak.SO", "s2bak.S2")
+  mode <- ifelse(all(is.na(surv)), "s2bak.so", "s2bak.s2")
 
   # Get the list of species in the data
   speciesListFull <- as.character(unique(obs$species))
-  if (mode == "s2bak.SO") {
+  if (mode == "s2bak.so") {
     speciesList <- speciesListFull
-  } else if(mode == "s2bak.S2") {
+  } else if (mode == "s2bak.s2") {
     speciesList <- colnames(surv)
     ## Assumes that if ind is NA, remove first entry (index)
     ## Otherwise remove whatever has the value of `ind`
@@ -324,12 +324,12 @@ fit.s2 <- function(formula, data, obs, surv = NA, background = NA,
 
 #' @rdname s2bak
 #' @export
-fit.so <- function(formula, data, obs, background = NA,
+fit.s2bak.so <- function(formula, data, obs, background = NA,
                      sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
                      ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
-  return(fit.s2(formula, data, obs,
+  return(fit.s2bak.s2(formula, data, obs,
     surv = NA, background = background,
     sdm.fun = sdm.fun,
     overlapBackground = overlapBackground, nbackground = nbackground,
@@ -366,7 +366,7 @@ fit.so <- function(formula, data, obs, background = NA,
 #' as a second-order GLM.
 #' @rdname s2bak
 #' @export
-fit.bak <- function(predictions, surv, data, trait) {
+fit.s2bak.bak <- function(predictions, surv, data, trait) {
   wh <- which(!colnames(surv)[-1] %in% trait$species)
   if (length(wh) > 0) {
     warning(paste("Columns from survey data missing from trait data and",
@@ -380,7 +380,7 @@ fit.bak <- function(predictions, surv, data, trait) {
     speciesList = speciesList,
     speciesListFull = unique(trait$species)
   )
-  class(out) <- "s2bak.BaK"
+  class(out) <- "s2bak.bak"
 
   cat("Fitting bias adjustment kernel on", length(speciesList),
   "survey species and", length(out$speciesListFull), "species total.\n")
@@ -513,7 +513,7 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
                         readout = NA, version = c("full", "short")[1], ...) {
   # Output for fit.s2bak
   out <- list()
-  class(out) <- "s2bak.S2BaK"
+  class(out) <- "s2bak"
 
   # Index name, if it's row #s or a specific column
   if (ncol(obs) != 2 | !("species" %in% colnames(obs))) {
@@ -527,7 +527,7 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
   }
 
   ## First, fit SO model
-  out$s2bak.SO <- fit.so(formula = formula, data = data, obs = obs,
+  out$s2bak.SO <- fit.s2bak.so(formula = formula, data = data, obs = obs,
                             background = background, sdm.fun = sdm.fun,
                             overlapBackground = overlapBackground,
                             nbackground = nbackground, ncores = ncores,
@@ -537,7 +537,7 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
   ## Only for species with survey data
   if (all(is.na(surv))) stop("Missing survey data.")
 
-  out$s2bak.S2 <- fit.s2(formula = formula, data = data,
+  out$s2bak.S2 <- fit.s2bak.s2(formula = formula, data = data,
                             obs = obs,
                             surv = surv,
                             background = background,
@@ -561,12 +561,12 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
 
   # Make predictions using out$SO (always type = "response")
   ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
-  predictions <- s2bak.predict.SOS2(out$s2bak.SO, surv_dat,
+  predictions <- predict.s2bak.s2(out$s2bak.SO, surv_dat,
                                       predict.fun = predict.fun,
                                       useReadout = !is.na(readout),
                                       ncores = ncores, type = "response")
 
-  out$s2bak.BaK <- fit.bak(predictions, surv, surv_dat, trait)
+  out$s2bak.BaK <- fit.s2bak.bak(predictions, surv, surv_dat, trait)
 
   return(out)
 }
@@ -581,11 +581,11 @@ fit.s2bak <- function(formula, data, obs, surv, trait,
 #' the use of s2bak predict functions will not apply S2 but instead only run
 #' predictions with sightings-only and BaK adjustment.
 #'
-#' @param so output from fit.so or fit.s2 without survey data.
-#' @param s2 output from fit.s2 function
-#' @param bak output from s2back.BaK function
-#' @return Object of class s2bak.S2Bak, equivalent to having run
-#' \link[s2bak]{fit.s2bak} for the entire dataset
+#' @param so output from fit.s2bak.so or fit.s2bak.s2 without survey data.
+#' @param s2 output from fit.s2bak.s2 function
+#' @param bak output from fit.s2bak.bak function
+#' @return Object of class s2bak, equivalent to having run
+#' \link[s2bak]{fit.s2bak}
 #' @export
 combine.s2bak <- function(so = NULL, s2 = NULL, bak = NULL) {
   out <- list(
@@ -593,6 +593,6 @@ combine.s2bak <- function(so = NULL, s2 = NULL, bak = NULL) {
     s2bak.S2 = s2,
     s2bak.BaK = bak
   )
-  class(out) <- "s2bak.S2BaK"
+  class(out) <- "s2bak"
   return(out)
 }

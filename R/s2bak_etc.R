@@ -11,8 +11,8 @@ dst <- function(x, y) {
 #' @title Truncate values based on min and max input
 #'
 #' @description Truncate provided numerical values based on a defined minimum
-#' and maximum cutoff. Used in \link[s2bak]{s2bak.BaK} and
-#' \link[s2bak]{predict.s2bak.BaK}.
+#' and maximum cutoff. Used in \link[s2bak]{fit.bak} and
+#' \link[s2bak]{predict.bak}.
 #'
 #' @param x Numerical values to truncate
 #' @param min Minimum value to truncate, where \code{x <= min} with be

@@ -3,10 +3,10 @@
 
 #' @title Modified maxnet function for s2bak
 #'
-#' @description Wrapper function for maxnet::maxnet function. The function
-#' converts the arguments for maxnet to the necessary structure for fitting an
-#' SDM within S2BaK, where the first and second arguments are the formula and
-#' dataset, respectively.
+#' @description Wrapper function for \link[maxnet]{maxnet} function.
+#' The function converts the arguments for maxnet to the necessary structure
+#' for fitting an SDM within S2BaK, where the first and second arguments are
+#' the formula and dataset, respectively.
 #'
 #' @param formula Formula for fitting the maxnet model
 #' @param data Fitting dataset including response variable

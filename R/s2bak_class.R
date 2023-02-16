@@ -2,7 +2,7 @@
 #### WORK IN PROGRESS ####
 ## THESE SHOULD NOT HAVE THE SAME NAME AS THE FITTING FUNCTIONS!!!
 
-if(0){
+if (0) {
     ## Defining classes
     s2bak.SO <- setClass(Class = "s2bak.SO",
                         slots = c(speciesList = "character",

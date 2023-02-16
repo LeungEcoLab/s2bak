@@ -2,12 +2,12 @@
 #' @title Build sightings-only or S2 species distribution models for
 #' multiple species.
 #'
-#' @description s2bak.SO function fits SDMs for each provided species within
+#' @description fit.so function fits SDMs for each provided species within
 #' the same system, using a specified SDM approach (or the default which are
 #' GAMs from the mgcv package). Parallelisation is possible when processing each
 #' SDM, with the default being 1 core.
 #'
-#' The s2bak.S2 function fits SDMs using species sightings, background sites and
+#' The fit.s2 function fits SDMs using species sightings, background sites and
 #' survey sites, differentiating between them using a binary 'so' predictor,
 #' denoting sightings-only (1) or survey (0).
 #'
@@ -77,7 +77,7 @@
 #' presence-background (1) or presence-absence data (0).
 #' @rdname s2bak
 #' @export
-s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
+fit.s2 <- function(formula, data, obs, surv = NA, background = NA,
                      sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
                      addSurvey = TRUE,
@@ -324,12 +324,12 @@ s2bak.S2 <- function(formula, data, obs, surv = NA, background = NA,
 
 #' @rdname s2bak
 #' @export
-s2bak.SO <- function(formula, data, obs, background = NA,
+fit.so <- function(formula, data, obs, background = NA,
                      sdm.fun = gam, overlapBackground = TRUE,
                      nbackground = 10000,
                      ncores = 1,
                      readout = NA, version = c("full", "short")[1], ...) {
-  return(s2bak.S2(formula, data, obs,
+  return(fit.s2(formula, data, obs,
     surv = NA, background = background,
     sdm.fun = sdm.fun,
     overlapBackground = overlapBackground, nbackground = nbackground,
@@ -366,7 +366,7 @@ s2bak.SO <- function(formula, data, obs, background = NA,
 #' as a second-order GLM.
 #' @rdname s2bak
 #' @export
-s2bak.BaK <- function(predictions, surv, data, trait) {
+fit.bak <- function(predictions, surv, data, trait) {
   wh <- which(!colnames(surv)[-1] %in% trait$species)
   if (length(wh) > 0) {
     warning(paste("Columns from survey data missing from trait data and",
@@ -435,7 +435,7 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
     #### TBD ####
     wh <- which(is.na(fit_sp[i, ]))
     if (length(wh) > 0) {
-      warning(cat("Missing trait data, which were imputated",
+      warning(cat("Missing trait data, which were imputed",
                   "using mean of the column."))
       fit_sp[i, wh] <- msd[colnames(wh)]
     }
@@ -504,14 +504,14 @@ s2bak.BaK <- function(predictions, surv, data, trait) {
 #' @return An S2BaK class object containing S2, SO and BaK.
 #' @rdname s2bak
 #' @export
-s2bak.S2BaK <- function(formula, data, obs, surv, trait,
+fit.s2bak <- function(formula, data, obs, surv, trait,
                         background = NA, sdm.fun = gam,
                         predict.fun = predict.gam,
                         overlapBackground = TRUE, nbackground = 10000,
                         addSurvey = TRUE,
                         ncores = 1,
                         readout = NA, version = c("full", "short")[1], ...) {
-  # Output for s2bak.S2BaK
+  # Output for fit.s2bak
   out <- list()
   class(out) <- "s2bak.S2BaK"
 
@@ -527,7 +527,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   }
 
   ## First, fit SO model
-  out$s2bak.SO <- s2bak.SO(formula = formula, data = data, obs = obs,
+  out$s2bak.SO <- fit.so(formula = formula, data = data, obs = obs,
                             background = background, sdm.fun = sdm.fun,
                             overlapBackground = overlapBackground,
                             nbackground = nbackground, ncores = ncores,
@@ -537,7 +537,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
   ## Only for species with survey data
   if (all(is.na(surv))) stop("Missing survey data.")
 
-  out$s2bak.S2 <- s2bak.S2(formula = formula, data = data,
+  out$s2bak.S2 <- fit.s2(formula = formula, data = data,
                             obs = obs,
                             surv = surv,
                             background = background,
@@ -566,7 +566,7 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
                                       useReadout = !is.na(readout),
                                       ncores = ncores, type = "response")
 
-  out$s2bak.BaK <- s2bak.BaK(predictions, surv, surv_dat, trait)
+  out$s2bak.BaK <- fit.bak(predictions, surv, surv_dat, trait)
 
   return(out)
 }
@@ -575,23 +575,23 @@ s2bak.S2BaK <- function(formula, data, obs, surv, trait,
 #'
 #' @description Combines separately fitted SO, S2 and BaK models into a single
 #' S2BaK object. The output will be identical to running the entire process in
-#' s2bak.S2BaK function, and can be used in the same situations.
+#' fit.s2bak function, and can be used in the same situations.
 #'
 #' Models can be partially provided, for instance only SO and BaK, in which case
 #' the use of s2bak predict functions will not apply S2 but instead only run
 #' predictions with sightings-only and BaK adjustment.
 #'
-#' @param SO output from s2bak.SO or s2bak.S2 without survey data.
-#' @param S2 output from s2bak.S2 function
-#' @param BaK output from s2back.BaK function
+#' @param so output from fit.so or fit.s2 without survey data.
+#' @param s2 output from fit.s2 function
+#' @param bak output from s2back.BaK function
 #' @return Object of class s2bak.S2Bak, equivalent to having run
-#' \link[s2bak]{s2bak.S2BaK} for the entire dataset
+#' \link[s2bak]{fit.s2bak} for the entire dataset
 #' @export
-s2bak.combine <- function(SO = NULL, S2 = NULL, BaK = NULL) {
+combine.s2bak <- function(so = NULL, s2 = NULL, bak = NULL) {
   out <- list(
-    s2bak.SO = SO,
-    s2bak.S2 = S2,
-    s2bak.BaK = BaK
+    s2bak.SO = so,
+    s2bak.S2 = s2,
+    s2bak.BaK = bak
   )
   class(out) <- "s2bak.S2BaK"
   return(out)

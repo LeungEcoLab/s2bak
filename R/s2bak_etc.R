@@ -12,7 +12,7 @@ dst <- function(x, y) {
 #'
 #' @description Truncate provided numerical values based on a defined minimum
 #' and maximum cutoff. Used in \link[s2bak]{s2bak.BaK} and
-#' \link[s2bak]{s2bak.predict.BaK}.
+#' \link[s2bak]{predict.s2bak.BaK}.
 #'
 #' @param x Numerical values to truncate
 #' @param min Minimum value to truncate, where \code{x <= min} with be
@@ -34,7 +34,7 @@ s2bak.truncate <- function(x, min = NA, max = NA) {
 #'
 #' @description Adds 'so' (or other specified predictor) to the formula as an
 #' additional predictor. The arugment 'formula' assumes the formula follows a
-#' "Y ~ X" format. The functino will not add the predictor if it is already
+#' "Y ~ X" format. The function will not add the predictor if it is already
 #' in the formula.
 #'
 #' @param formula Formula or list of formulas to add 'pred' to
@@ -90,7 +90,7 @@ s2bak.scale <- function(data, project = NA, getScaleValues = FALSE) {
 
   if (!all(is.na(project))) {
     # Throw an error if there is a mismatch in environment names
-    diff <- c(setdiff(colnames(data), colnames(project)), 
+    diff <- c(setdiff(colnames(data), colnames(project)),
               setdiff(colnames(project), colnames(data)))
     if (length(diff) > 0) {
       stop(paste("Column names do not align:", paste(diff, collapse = ", ")))

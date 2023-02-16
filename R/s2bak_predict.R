@@ -12,9 +12,9 @@
 #' @param trait Trait data, with column 'species' matching those in predictions.
 #' @return Model predictions but with adjustments made by the BaK model.
 #' Note the default right now is type="response"
-#' @rdname s2bak.predict
+#' @rdname predict.s2bak
 #' @export
-s2bak.predict.BaK <- function(predictions, bak, trait, data) {
+predict.s2bak.BaK <- function(predictions, bak, trait, data) {
   predictions <- as.matrix(predictions)
   rownames(predictions) <- 1:nrow(predictions)
   predictions2 <- melt(predictions)
@@ -71,9 +71,9 @@ s2bak.predict.BaK <- function(predictions, bak, trait, data) {
 #' prediction (predict.fun).
 #' @return Generates a matrix of predictions with rows being indices in the
 #' data.frame, and columns representing each species.
-#' @rdname s2bak.predict
+#' @rdname predict.s2bak
 #' @export
-s2bak.predict.SOS2 <- function(model,
+predict.s2bak.SOS2 <- function(model,
                                 newdata,
                                 predict.fun = predict.gam,
                                 useReadout = FALSE,
@@ -166,7 +166,7 @@ s2bak.predict.SOS2 <- function(model,
 #' and makes the appropriate prediction.
 #'
 #' If the provided model is s2bak.S2 or s2bak.SO, predictions will be made
-#' using s2bak.predict.SOS2. If an SO model with BaK is provided (that is, an
+#' using predict.s2bak.SOS2. If an SO model with BaK is provided (that is, an
 #' S2BaK class model with S2 = NULL, for example through combine without a
 #' provided S2), the functions returns adjusted predictions requiring trait
 #' data for the species. If the full S2BaK model (SO, S2 and BaK are provided),
@@ -184,19 +184,19 @@ s2bak.predict.SOS2 <- function(model,
 #' @param ... Any additional arguments for the predict.fun
 #' @return Model predictions as a data.frame with columns for each species and
 #' rows for each location
-#' @rdname s2bak.predict
+#' @rdname predict.s2bak
 #' @export
-s2bak.predict <- function(model,
+predict.s2bak <- function(model,
                           newdata,
                           trait = NA,
                           predict.fun = predict.gam,
                           ncores = 1,
                           useReadout = FALSE,
                           ...) {
-  # Simplest cases, which require a call to s2bak.predict.SOS2
+  # Simplest cases, which require a call to predict.s2bak.SOS2
 
   if (class(model) == "s2bak.SO" | class(model) == "s2bak.S2") {
-    return(s2bak.predict.SOS2(model, newdata, predict.fun,
+    return(predict.s2bak.SOS2(model, newdata, predict.fun,
                               useReadout = useReadout,
                               ncores = ncores, ...))
   } else if (class(model) == "s2bak.S2BaK") {
@@ -214,21 +214,22 @@ s2bak.predict <- function(model,
       speciesList.so <- speciesList[!(speciesList %in% speciesList.s2)]
 
       # Make predictions for S2 species
-      out.S2 <- s2bak.predict.SOS2(model = model$s2bak.S2, newdata = newdata,
+      out.S2 <- predict.s2bak.SOS2(model = model$s2bak.S2, newdata = newdata,
                                     predict.fun = predict.fun,
-                                    useReadout = useReadout, ncores = ncores, ...)
+                                    useReadout = useReadout,
+                                    ncores = ncores, ...)
     } else {
       # No S2, fit for all species
       speciesList.so <- speciesList
     }
 
     # Make predictions for SO species
-    out.SO <- s2bak.predict.SOS2(model = model$s2bak.SO, newdata = newdata,
+    out.SO <- predict.s2bak.SOS2(model = model$s2bak.SO, newdata = newdata,
                                   predict.fun = predict.fun,
                                   useReadout = useReadout, ncores = ncores, ...)
 
     # Make adjustment for SO species
-    out.SO <- s2bak.predict.BaK(out.SO, model$s2bak.BaK, trait, newdata)
+    out.SO <- predict.s2bak.BaK(out.SO, model$s2bak.BaK, trait, newdata)
 
     # Combine and output
     out <- cbind(out.SO, out.S2)

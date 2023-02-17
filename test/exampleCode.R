@@ -23,8 +23,8 @@ library(s2bak)
 ## Create dataset for 20 species (default is 30).
 dat <- s2bakSim(species = 20)
 ## Subset survey data species to simulate an incomplete dataset
-## This doesn't work the way we want to so it will likely be re-done
-dat$Survey <- dat$Survey[, c(1, sample(2:11, 10))]
+survey_species <- sample(unique(dat$Survey$species), 10)
+dat$Survey <- dat$Survey[dat$Survey$species %in% survey_species, ]
 
 ## First sightings-only model (`s2bak.SO`) using GAM and single core
 ## `s2bakSim` produces a smaller dataset, so we reduce `nbackground`
@@ -32,7 +32,7 @@ dat$Survey <- dat$Survey[, c(1, sample(2:11, 10))]
 ## so they are randomly sampled from `data`
 model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
                            Environment3 + Environment4,
-                         data = dat$Environment,
+                         data_obs = dat$Environment_Sightings,
                          obs = dat$Sightings,
                          ncores = 1,
                          sdm.fun = glm,
@@ -40,11 +40,11 @@ model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
                          family = binomial
 )
 
-## We can also fit models using GAM
+## We can also fit using other models, such as mgcv::gam
 library(mgcv)
 model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
                                s(Environment3) + s(Environment4),
-                             data = dat$Environment,
+                             data_obs = dat$Environment_Sightings,
                              obs = dat$Sightings,
                              ncores = 1,
                              sdm.fun = mgcv::gam,
@@ -58,7 +58,8 @@ model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
 ## This will limit it the number of models fit to the species with survey data!
 model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
                            Environment3 + Environment4,
-                         data = dat$Environment,
+                         data_obs = dat$Environment_Sightings,
+                         data_surv = dat$Environment_Survey,
                          obs = dat$Sightings,
                          surv = dat$Survey,
                          ncores = 1,
@@ -72,7 +73,8 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
 bgsites <- tgb_sample(obs = dat$Sightings, nbackground = 2000)
 model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
                            Environment3 + Environment4,
-                         data = dat$Environment,
+                         data_obs = dat$Environment_Sightings,
+                         data_surv = dat$Environment_Survey,
                          obs = dat$Sightings,
                          surv = dat$Survey,
                          ncores = 1,
@@ -82,18 +84,17 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
 )
 
 ## Fit BaK using the presence-only model (`model.so`)
-## Generate survey data (this seems a bit out of sorts..
-## re-format to match SOS2?)
-surv_env <- as.data.frame(dat$Environment[dat$Survey[, 1], ])
+
 ## Generate predictions on survey sites
 ## `predict` here is equivalent to `predict.s2bak.so`
-so_preds <- predict(model_so, surv_env,
+so_preds <- predict(model_so, dat$Environment_Survey,
                     predict.fun = predict.glm,
                     ncores = 1, type = "response")
 
 ## Fit BaK using survey predictions generated from sightings-only model
 ## This is super unintuitive...
-model_bak <- fit.s2bak.bak(so_preds, dat$Survey, surv_env, dat$Trait)
+model_bak <- fit.s2bak.bak(so_preds, dat$Environment_Survey,
+                            dat$Survey, dat$Trait)
 
 ## We can combine all the three objects into a single s2bak object
 ## This produces the same output as using `s2bak.S2BaK` (see below)
@@ -103,7 +104,8 @@ model_s2bak <- combine.s2bak(model_so, model_s2, model_bak)
 ## `s2bak.S2BaK`, which calls fits the sightings-only and S2 SDMs as well as BaK
 model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                             Environment3 + Environment4,
-                          data = dat$Environment,
+                          data_obs = dat$Environment_Sightings,
+                          data_surv = dat$Environment_Sightings,
                           obs = dat$Sightings,
                           surv = dat$Survey,
                           trait = dat$Trait,
@@ -152,19 +154,21 @@ so_preds <- predict.s2bak.SOS2(model_so, surv_env,
 if (0) {
   formula <- pa ~ Environment1 + Environment2 +
     Environment3 + Environment4
-  data <- dat$Environment
+  data_obs <- dat$Environment_Sightings
+  data_surv <- dat$Environment_Survey
   obs <- dat$Sightings
   surv <- dat$Survey
   trait <- dat$Trait
-  background <- NA
   sdm.fun <- glm
   predict.fun <- predict.glm
-  overlapBackground <- TRUE
+  background <- NA
   nbackground <- 2000
+  overlapBackground <- TRUE
   addSurvey <- TRUE
   ncores <- 1
   readout <- NA
   version <- "full"
   ### Although this won't work with `...`
   family <- binomial
+
 }

@@ -87,7 +87,8 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
 
 ## Generate predictions on survey sites
 ## `predict` here is equivalent to `predict.s2bak.so`
-so_preds <- predict(model_so, dat$Environment_Survey,
+so_preds <- predict(model_so,
+                    newdata = dat$Environment_Survey,
                     predict.fun = predict.glm,
                     ncores = 1, type = "response")
 

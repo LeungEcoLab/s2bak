@@ -17,7 +17,8 @@ s2bakSim(
 \arguments{
 \item{species}{numeric. The number of species used for fitting}
 
-\item{sites}{numeric. The number of sites in the dataset}
+\item{sites}{numeric. The number of environment sites in the dataset
+for species sightings}
 
 \item{surv}{numeric. The number of survey sites}
 
@@ -35,15 +36,15 @@ establishment given species trait}
 the number of presences is less than the minimum.}
 }
 \value{
-a list with a data.frame of the environment for each site, a
-data.frame of species traits, a data.frame of species sightings, and
-the survey data as a matrix.
+a list of data.frames for the environment of the sightings,
+the environment of the surveys, species traits, species sightings, and
+the survey presences.
 }
 \description{
 This function simulates the data needed for fitting SDMs for
 multiple species including generated trait and environments. The function is
 to primarily to illustrate the data structure, as well as demonstration
-of the provided functions.
+of the package functions.
 }
 \examples{
 ## See ?fit.s2bak

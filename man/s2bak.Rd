@@ -11,13 +11,14 @@ multiple species.}
 \usage{
 fit.s2bak.s2(
   formula,
-  data,
+  data_obs,
+  data_surv = NA,
   obs,
   surv = NA,
-  background = NA,
   sdm.fun = glm,
-  overlapBackground = TRUE,
+  background = NA,
   nbackground = 10000,
+  overlapBackground = TRUE,
   addSurvey = TRUE,
   ncores = 1,
   readout = NA,
@@ -27,31 +28,32 @@ fit.s2bak.s2(
 
 fit.s2bak.so(
   formula,
-  data,
+  data_obs,
   obs,
-  background = NA,
   sdm.fun = glm,
-  overlapBackground = TRUE,
+  background = NA,
   nbackground = 10000,
+  overlapBackground = TRUE,
   ncores = 1,
   readout = NA,
   version = c("full", "short")[1],
   ...
 )
 
-fit.s2bak.bak(predictions, surv, data, trait)
+fit.s2bak.bak(predictions, data_surv, surv, trait)
 
 fit.s2bak(
   formula,
-  data,
+  data_obs,
+  data_surv = NA,
   obs,
-  surv,
+  surv = NA,
   trait,
-  background = NA,
   sdm.fun = glm,
   predict.fun = predict.glm,
-  overlapBackground = TRUE,
+  background = NA,
   nbackground = 10000,
+  overlapBackground = TRUE,
   addSurvey = TRUE,
   ncores = 1,
   readout = NA,
@@ -67,18 +69,38 @@ In this case, species will be fit using their corresponding formula.
 The response variable can have any name, as the function name the column
 accordingly.}
 
-\item{data}{Environmental data with columns for environmental data
-and rows for each site. Assumes all columns correspond to relevant
-environmental data and match with predictions/survey data. Also assumes
-that inputted columns are all relevant in modelling location bias.}
+\item{data_obs}{A data.frame containing the covariates used for fitting
+\code{s2bak.SO} and \code{s2bak.S2} models with sightings data.
+The index of the data.frame linking sites to observations should
+correspond to the indices in \code{obs}.}
 
-\item{obs}{Species observations as a data.frame, with a column for species
+\item{data_surv}{A data.frame containing the covariates used for fitting
+\code{s2bak.S2} models with survey data. The index of the data.frame linking sites
+to survey presences should correspond to the indices in \code{surv}. Default is
+NA, as survey data is not necessary to fit \code{s2bak.SO} models.}
+
+\item{obs}{A data.frame of species observations, with a column for species
 name (must be labelled 'species') and column of index of observations to
 reflect presences. If the index column name is not found in 'data', it
 assumes row number.}
 
-\item{surv}{Survey data as a matrix, with rows corresponding to each site.
-Assumes the first column is the index matching the environmental data.}
+\item{surv}{A data.frame of species presences for the survey data used to
+fit \code{s2bak.S2} models (optional otherwise), with a column for species
+name (must be labelled 'species') and column of index of observations to
+reflect presences. If the index column name is not found in 'data', it
+assumes row number.
+It will add the an additional binary predictor to the formula(s), \code{so},
+denoting whether a sites is sightings-only (1) or survey data (0).
+If 'so' is already in formula (e.g. if modifying
+the variable in any way, then set addSurvey = FALSE). If left as NA,
+it will fit the SDMs as presence-only models with the function of choice.
+NOTE: Assumes all species are provided in the survey data, and that they are
+surveyed over the same sites (i.e. matrix-type).}
+
+\item{sdm.fun}{Model (as function) used for fitting (the default is
+\link[stats]{glm}). The function must have the formula
+as their first argument, and 'data' as the parameter for the dataset
+(including presences and background sites within the data.frame).}
 
 \item{background}{Background sites (pseudo-absences) used to fit the
 presence-only model, provided as a vector of indices of data (following the
@@ -87,17 +109,12 @@ same column name as observations). If the index column name is not found in
 sample 'nbackground' sites, with or without overlap ('overlapBackground').
 Currently, only one set of background sites can be used.}
 
-\item{sdm.fun}{Model (as function) used for fitting (the default is
-\link[stats]{glm}). The function must have the formula
-as their first argument, and 'data' as the parameter for the dataset
-(including presences and background sites within the data.frame).}
+\item{nbackground}{Number of background sites to sample. Only applies
+if background = NA.}
 
 \item{overlapBackground}{Whether sampled background sites that overlap with
 observations should be included. By default, it allows overlap. If FALSE,
 number of background sites may be less than specified or provided.}
-
-\item{nbackground}{Number of background sites to sample. Only applies
-if background = NA.}
 
 \item{addSurvey}{Whether the binary variable 'so' should be added to the
 formula(s), denoting whether sites are sightings-only or survey. If survey

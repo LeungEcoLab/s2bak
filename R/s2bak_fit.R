@@ -366,8 +366,6 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 #' @param predictions Sightings-only (SO) model predictions over the survey
 #' sites for all species, beyond those found in the survey data, as a matrix
 #' with columns for each species and rows for each site.
-#' @param data_surv
-#' @param surv
 #' @param trait Full trait data for the species predictions, as a data.frame
 #' with 'species' as a column and relevant traits for the remainder.
 #' Like with the predictions, the species in the dataset do not necessarily

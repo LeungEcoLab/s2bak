@@ -15,6 +15,7 @@
 #' Note the default right now is type="response"
 #' @rdname predict.s2bak
 #' @export predict.s2bak.bak
+#' @export
 predict.s2bak.bak <- function(predictions, bak, trait, data) {
   predictions <- as.matrix(predictions)
   rownames(predictions) <- 1:nrow(predictions)
@@ -71,6 +72,7 @@ predict.s2bak.bak <- function(predictions, bak, trait, data) {
 #' data.frame, and columns representing each species.
 #' @rdname predict.s2bak
 #' @export predict.s2bak.s2
+#' @export
 predict.s2bak.s2 <- function(model,
                              newdata,
                              predict.fun = predict.glm,
@@ -160,6 +162,7 @@ predict.s2bak.s2 <- function(model,
 
 #' @rdname predict.s2bak
 #' @export predict.s2bak.so
+#' @export
 predict.s2bak.so <- function(model,
                              newdata,
                              predict.fun = predict.glm,
@@ -195,6 +198,7 @@ predict.s2bak.so <- function(model,
 #' rows for each location
 #' @rdname predict.s2bak
 #' @export predict.s2bak
+#' @export
 predict.s2bak <- function(model,
                           newdata,
                           trait = NA,

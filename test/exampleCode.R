@@ -71,7 +71,7 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
 ## If we wanted to provide our own background data, we would provide the indices
 ## For instance with target-group background sampling
 bgsites <- tgb_sample(obs = dat$Sightings, nbackground = 2000)
-model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
+model_s2_tgb <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
                            Environment3 + Environment4,
                          data_obs = dat$Environment_Sightings,
                          data_surv = dat$Environment_Survey,
@@ -122,8 +122,13 @@ model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                           family = binomial
 )
 
-## We can compare the predictive results of BaK vs S2 vs SO for survey species
-all_predictions <- predict()
+## We can obtain predictions for all modelling approaches
+## by specifying output = "all"
+all_predictions <- predict(model_s2bak2,
+                                  dat$Environment_Sightings,
+                                  trait = dat$Trait,
+                                  output = "all", type = "response"
+)
 
 ## If memory issues arise, we can output the fitted models to file instead
 ## We can also specify "short" output for this reason
@@ -145,7 +150,7 @@ model_so <- fit.so(pa ~ Environment1 + Environment2 +
 
 ## Predictions can still be made in this way, using the same object
 ## useReadout forces files to be read
-so_preds <- predict.s2bak.SOS2(model_so, surv_env,
+so_preds <- predict(model_so, surv_env,
                                predict.fun = predict.glm,
                                ncores = 1, useReadout = TRUE)
 
@@ -171,5 +176,7 @@ if (0) {
   version <- "full"
   ### Although this won't work with `...`
   family <- binomial
+
+  model <- model_s2bak2
 
 }

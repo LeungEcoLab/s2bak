@@ -1,55 +1,196 @@
 #' @title Make predictions using fitted SO, S2, BaK or S2BaK class models
 #'
-#' @description When using a fitted s2bak.bak model, adjustments are made using
-#' trait, environmental data and sightings-only (\link[s2bak]{s2bak.so})
-#' predictions.
+#' #' @description S3 methods for making models predictions using the output
+#' from \link[s2bak]{fit.s2bak}, \link[s2bak]{fit.s2bak.so},
+#' \link[s2bak]{fit.s2bak.s2} and \link[s2bak]{fit.s2bak.bak}.
 #'
-#' @param predictions Sightings-only predictions as a matrix or data.frame with
-#' rows as sites and columns as species. Assumes as type="response", and rows of
-#' data.frame correspond to newdata rows.
-#' @param bak Output from fit.s2bak.bak(), with fitted BaK model
-#' @param data Environmental data, with rows corresponding to rows of
-#' predictions
-#' @param trait Trait data, with column 'species' matching those in predictions.
-#' @return Model predictions but with adjustments made by the BaK model.
-#' Note the default right now is type="response"
+#' If the complete model of class `s2bak` is provided, the user can specify
+#' what type of model predictions to use to allow for specific outputs from
+#' the sub-components of the model.
+#'
+#' @param model Outputted model from fit.s2bak.so, fit.s2bak.s2, fit.s2bak or
+#' s2bak.combine.
+#' @param newdata Environmental data to predict
+#' @param trait Trait data, optional if output = "s2" or output = "so"
+#' @param predict.fun Prediction function for SDM, which must match the model
+#' function used for s2bak.s2 and s2bak.so models).
+#' @param output The choice of how predictions are made using the `s2bak` model.
+#'
+#' Only one type of output can be selected: sightings-only (output = "so"),
+#' sightings-survey (S2; output = "s2") and bias-adjusted sightings-only
+#' (output = "sobak").
+#'
+#' If interested in using the `s2bak.bak` model on its own with provided model
+#' predictions, see \link[s2bak]{predict.s2bak.bak}.
+#'
+#' The default method is `s2bak`, which will return a single set
+#' of predictions for each species, prioritizing
+#' S2 models over bias-adjusted sightings-only models and .
+#' If the full S2BaK model is provided, the function will
+#' make predictions using \link[s2bak]{s2bak.predict.s2} for species with
+#' sightings and survey data, and adjusted sightings-only predictions using BaK
+#' for species without survey data.
+#' If only `s2bak.so` and `s2bak.bak` models are provided
+#' (that is, an S2BaK class model with S2 = NULL), the functions returns only
+#' adjusted sightings-only predictions, requiring trait data for the species.
+#' Conversely, if only `s2bak.s2` model is provided, then predictions are made
+#' only with s2bak.predict.s2.
+#'
+#' #' If the `all` is selected, all sets of predictions are returned as a
+#' list: `so`, `s2`, `sobak` and `s2bak`.
+#' If models are missing, then only available predictions are made.
+#' For example, if the `s2bak` model contains only
+#' `s2bak.s2` and `s2bak.so` models, then only those model
+#' predictions will be returns without BaK adjustment.
+#'
+#' @param useReadout Whether to force useReadout in SOS2
+#' @param ncores Paralellize SO/S2 predictions, if NA then auto-pick it
+#' @param ... Any additional arguments for the predict.fun
+#' @return Model predictions as a data.frame with columns for each species and
+#' rows for each location. If output = "all" is selected, a lot of
+#' data.frame predictions are returned.
 #' @rdname predict.s2bak
-#' @export predict.s2bak.bak
+#' @export predict.s2bak
 #' @export
-predict.s2bak.bak <- function(predictions, bak, trait, data) {
-  predictions <- as.matrix(predictions)
-  rownames(predictions) <- 1:nrow(predictions)
-  predictions2 <- melt(predictions)
-  colnames(predictions2) <- c("loc", "species", "pred")
+predict.s2bak <- function(model,
+                          newdata,
+                          trait = NA,
+                          predict.fun = predict.glm,
+                          output = c("s2bak", "all", "so", "s2", "sobak")[1],
+                          ncores = 1,
+                          useReadout = FALSE,
+                          ...) {
 
-  # scale_so_sp
-  trait$pred <- predict.glm(bak$bak$bias_sp, trait)
-  # scale_so_l
-  data$pred <- predict.glm(bak$bak$bias_loc, data)
+  if (!(output %in% c("so", "s2", "all", "sobak", "s2bak"))){
+    stop(paste("Invalid output selected. Specify output as",
+          "`s2bak`, `all`, `so`, `s2` or `sobak`"))
+  }
 
-  predictions2$scale_so_l <- data$pred[predictions2$loc]
-  predictions2$scale_so_sp <- trait$pred[match(predictions2$species,
-                                               trait$species)]
-  predictions2$zso_only <- s2bak.truncate(
-    as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
-    -15,
-    15
-  )
+  check_mods <- unlist(lapply(model, is.null))
+  names(check_mods) <- names(model)
 
-  predictions2$pred_out <- predict(bak$bak$bias_adj,
-                                   predictions2,
-                                   type = "response")
+  if (all(check_mods)) {
+    stop("No valid models provided.")
+  }
 
-  # Convert back to wide format
-  predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred_out")
-  predictions2 <- predictions2[, -which(colnames(predictions2) == "loc")]
+  # We output a list if we use `all`
+  predictions <- list()
 
-  return(predictions2)
+  # We need to make SO predictions in every case except s2 output
+  if (output %in% c("so", "sobak", "all", "s2bak")) {
+    # Do we have a model?
+    # `check_mods` will be TRUE if NULL
+    if (check_mods["s2bak.SO"]) {
+      if (output == "all") {
+        warning(paste("s2bak.SO sub-model missing:",
+                      "sightings-only predictions excluded from `all`."))
+
+      } else {
+        stop("s2bak.SO sub-model missing from `s2bak` model.")
+
+      }
+
+    } else {
+      predictions[["so"]] <- predict.s2bak.so(model$s2bak.SO,
+                                              newdata, predict.fun,
+                                              useReadout = useReadout,
+                                              ncores = ncores, ...)
+
+    }
+  }
+
+  if (output %in% c("s2", "all", "s2bak")) {
+    # Do we have a model?
+    # `check_mods` will be TRUE if NULL
+    if (check_mods["s2bak.S2"]) {
+      if (output == "all") {
+        warning(paste("s2bak.S2 sub-model missing:",
+                      "survey-sightings predictions excluded from `all`."))
+
+      } else {
+        stop("s2bak.S2 sub-model missing from `s2bak` model.")
+
+      }
+
+    } else {
+      predictions[["s2"]] <- predict.s2bak.s2(model$s2bak.S2,
+                                              newdata, predict.fun,
+                                              useReadout = useReadout,
+                                              ncores = ncores, ...)
+
+    }
+  }
+
+  if (output %in% c("sobak", "all", "s2bak")) {
+    # We need s2bak.SO and s2bak.BaK
+    if (check_mods["s2bak.SO"] | check_mods["s2bak.BaK"]) {
+      if (output == "all") {
+        warning(paste("s2bak.SO, s2bak.BaK sub-model missing:",
+                      "bias-adjusted sightings-only predictions",
+                      "excluded from `all`."))
+
+      } else {
+        stop("s2bak.SO, s2bak.BaK sub-model missing from `s2bak` model.")
+
+      }
+
+    } else {
+      predictions[["sobak"]] <- predict.s2bak.bak(model$s2bak.BaK,
+                                              predictions = predictions[["so"]],
+                                              trait, newdata)
+
+    }
+
+  }
+
+  if (output %in% c("s2bak", "all")) {
+    # Can't
+    if (any(check_mods)) {
+      if (output == "all") {
+        warning(paste("Missing one or more sub-models: `s2bak` predictions",
+                      "excluded from `all`."))
+
+      } else {
+        stop("Missing sub-models: cannot make output = `s2bak` predictions.")
+
+      }
+
+    } else {
+      # get full species list
+      speciesList <- colnames(predictions[["sobak"]])
+      # get S2 species
+      spl_s2 <- colnames(predictions[["s2"]])
+      # get SO pecies
+      spl_so <- speciesList[!(speciesList %in% spl_s2)]
+
+      predictions[["s2bak"]] <- as.data.frame(
+                                  cbind(predictions[["s2"]][, spl_s2],
+                                        predictions[["sobak"]][, spl_so])
+                                )
+
+      colnames(predictions[["s2bak"]]) <- c(spl_s2, spl_so)
+
+      # Re-order columns
+      predictions[["s2bak"]] <- predictions[["s2bak"]][, speciesList]
+    }
+  }
+
+  # if output is all, return the full list
+  # otherwise return only what the user specified
+  if (output == "all") {
+    return(predictions)
+  } else {
+    return(predictions[[output]])
+  }
+
 }
 
-#' @description The function automatically detects which model class is used.
-#' \link[s2bak]{predict.s2bak.so} is a wrapper function that
-#' detects the class of the inputed model and makes the appropriate prediction.
+#' @description The function predict.s2bak.s2 is used for `s2bak.so` and
+#' `s2bak.s2` models. It automatically detects which
+#' model class is provided and makes the appropriate adjustments.
+#' \link[s2bak]{predict.s2bak.so} is a wrapper function
+#' that detects the class of the inputed model and makes the appropriate
+#' prediction.
 #'
 #' @param model Models of class `s2bak.so` or `s2bak.s2` can
 #' be used to make predictions for each species fitted.
@@ -78,7 +219,7 @@ predict.s2bak.s2 <- function(model,
                              predict.fun = predict.glm,
                              useReadout = FALSE,
                              ncores = 1, ...) {
-  cat("Predicting of class", class(model), "\n")
+  cat("Predictions using", class(model), "model\n")
 
   # Set cores
   registerDoParallel()
@@ -177,78 +318,51 @@ predict.s2bak.so <- function(model,
   ))
 }
 
-#' @description If the provided model is class s2bak.s2 or s2bak.so,
-#' predictions will be made using \link[s2bak]{predict.s2bak.s2}. If an SO
-#' model with BaK is provided (that is, an S2BaK class model with S2 = NULL,
-#' for example through combine without a provided S2), the functions returns
-#' adjusted predictions requiring trait data for the species. If the full
-#' S2BaK model (SO, S2 and BaK are provided), the function will make predictions
-#' with S2 for species with sightings and survey data, and adjusted
-#' predictions using SO and BaK for species without survey data.
+#' @description predict.s2bak.bak adjusts sightings-only predictions using a
+#' fitted s2bak.bak model, using trait, environmental data and
+#' sightings-only (\link[s2bak]{predict.s2bak.so}) predictions.
 #'
-#' @param model Outputted model from fit.s2bak.so, fit.s2bak.s2, fit.s2bak or
-#' s2bak.combine.
-#' @param newdata Environmental data to predict
-#' @param trait Trait data, optional if model is S2 or SO
-#' @param predict.fun prediction function for SDM (for S2 and SO)
-#' @param useReadout Whether to force useReadout in SOS2
-#' @param ncores Paralellize SO/S2 predictions, if NA then auto-pick it
-#' @param ... Any additional arguments for the predict.fun
-#' @return Model predictions as a data.frame with columns for each species and
-#' rows for each location
+#' @param model Output from fit.s2bak.bak(), with fitted BaK model
+#' @param predictions Sightings-only predictions as a matrix or data.frame with
+#' rows as sites and columns as species. Assumes as type="response", and rows of
+#' data.frame correspond to newdata rows.
+#' @param data Environmental data, with rows corresponding to rows of
+#' predictions
+#' @param trait Trait data, with column 'species' matching those in predictions.
+#' @return Model predictions but with adjustments made by the BaK model.
+#' Note the default right now is type="response"
 #' @rdname predict.s2bak
-#' @export predict.s2bak
+#' @export predict.s2bak.bak
 #' @export
-predict.s2bak <- function(model,
-                          newdata,
-                          trait = NA,
-                          predict.fun = predict.glm,
-                          ncores = 1,
-                          useReadout = FALSE,
-                          ...) {
-  # Simplest cases, which require a call to predict.s2bak.s2
+predict.s2bak.bak <- function(model, predictions, trait, data) {
+  cat("Predictions using s2bak.bak model\n")
+  predictions <- as.matrix(predictions)
+  rownames(predictions) <- 1:nrow(predictions)
+  predictions2 <- melt(predictions)
+  colnames(predictions2) <- c("loc", "species", "pred")
 
-  if (class(model) == "s2bak.so" | class(model) == "s2bak.s2") {
-    return(predict.s2bak.s2(model, newdata, predict.fun,
-                            useReadout = useReadout,
-                            ncores = ncores, ...))
-  } else if (class(model) == "s2bak.S2BaK") {
-    if (is.null(model$s2bak.SO) | is.null(model$s2bak.BaK)) {
-      stop("Missing SO or BaK model(s).")
-    }
-    if (all(is.na(trait))) stop("Missing trait data for BaK prediction.")
-    # Get species list, and identify which ones are S2 and with ones are SO-BaK
-    # SO should contain all species
-    speciesList <- model$s2bak.SO$speciesList
+  # scale_so_sp
+  trait$pred <- predict.glm(model$bak$bias_sp, trait)
+  # scale_so_l
+  data$pred <- predict.glm(model$bak$bias_loc, data)
 
-    # Check if NULL
-    if (!is.null(model$s2bak.S2)) {
-      speciesList.s2 <- model$s2bak.S2$speciesList
-      speciesList.so <- speciesList[!(speciesList %in% speciesList.s2)]
+  predictions2$scale_so_l <- data$pred[predictions2$loc]
+  predictions2$scale_so_sp <- trait$pred[match(predictions2$species,
+                                               trait$species)]
+  predictions2$zso_only <- s2bak.truncate(
+    as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
+    -15,
+    15
+  )
 
-      # Make predictions for S2 species
-      out.S2 <- predict.s2bak.s2(model = model$s2bak.S2, newdata = newdata,
-                                 predict.fun = predict.fun,
-                                 useReadout = useReadout,
-                                 ncores = ncores, ...)
-    } else {
-      # No S2, fit for all species
-      speciesList.so <- speciesList
-    }
+  predictions2$pred_out <- predict(model$bak$bias_adj,
+                                   predictions2,
+                                   type = "response")
 
-    # Make predictions for SO species
-    out.SO <- predict.s2bak.so(model = model$s2bak.SO, newdata = newdata,
-                               predict.fun = predict.fun,
-                               useReadout = useReadout, ncores = ncores, ...)
+  # Convert back to wide format
+  predictions2 <- dcast(predictions2, loc ~ species, value.var = "pred_out")
+  predictions2 <- predictions2[, -which(colnames(predictions2) == "loc")]
 
-    # Make adjustment for SO species
-    out.SO <- predict.bak(out.SO, model$s2bak.BaK, trait, newdata)
+  return(predictions2)
 
-    # Combine and output
-    out <- cbind(out.SO, out.S2)
-    out <- out[, speciesList]
-    return(out)
-  } else {
-    stop("Invalid class: requires object of class s2bak, s2bak.so or s2bak.s2.")
-  }
 }

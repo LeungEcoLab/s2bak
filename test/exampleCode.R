@@ -1,7 +1,8 @@
 ### Script to test examples for `s2bak` package
 # If working, they will be imported into the `s2bak` documentation
 
-rm(list = ls()); gc()
+rm(list = ls())
+gc()
 graphics.off()
 
 setwd("../test/")
@@ -34,8 +35,8 @@ model_so <- fit.s2bak.so(pa ~ Environment1 + Environment2 +
                            Environment3 + Environment4,
                          data_obs = dat$Environment_Sightings,
                          obs = dat$Sightings,
-                         ncores = 1,
                          sdm.fun = glm,
+                         ncores = 1,
                          nbackground = 2000,
                          family = binomial
 )
@@ -46,8 +47,8 @@ model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
                                s(Environment3) + s(Environment4),
                              data_obs = dat$Environment_Sightings,
                              obs = dat$Sightings,
-                             ncores = 1,
                              sdm.fun = mgcv::gam,
+                             ncores = 1,
                              nbackground = 2000,
                              method = "GCV.Cp",
                              select = TRUE,

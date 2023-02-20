@@ -46,10 +46,10 @@
 #' it will fit the SDMs as presence-only models with the function of choice.
 #' NOTE: Assumes all species are provided in the survey data, and that they are
 #' surveyed over the same sites (i.e. matrix-type).
-#' @param sdm.fun Model (as function) used for fitting (the default is
-#' \link[stats]{glm}). The function must have the formula
-#' as their first argument, and 'data' as the parameter for the dataset
-#' (including presences and background sites within the data.frame).
+#' @param sdm.fun Model (as function) used for fitting. The function must
+#' have the formula as their first argument, and 'data' as the parameter
+#' for the dataset (including presences and background sites
+#' within the data.frame).
 #' @param background Background sites (pseudo-absences) used to fit the
 #' presence-only model, provided as a vector of indices of data (following the
 #' same column name as observations). If the index column name is not found in
@@ -93,7 +93,7 @@
 fit.s2bak.s2 <- function(formula,
                          data_obs, data_surv = NA,
                          obs, surv = NA,
-                         sdm.fun = glm,
+                         sdm.fun,
                          background = NA,
                          nbackground = 10000,
                          overlapBackground = TRUE,
@@ -159,10 +159,12 @@ fit.s2bak.s2 <- function(formula,
                  "formulas with each index named after",
                  "the corresponding species.\n"))
     }
+
   } else {
     stop(paste("Invalid formula type. Please provide a single formula or a",
                "list of formulas with each index named after the",
                "corresponding species.\n"))
+
   }
 
   # Output for the model
@@ -344,7 +346,8 @@ fit.s2bak.s2 <- function(formula,
 #' @rdname s2bak
 #' @export
 fit.s2bak.so <- function(formula, data_obs, obs,
-                         sdm.fun = glm, background = NA,
+                         sdm.fun,
+                         background = NA,
                          nbackground = 10000,
                          overlapBackground = TRUE,
                          index = NA,
@@ -546,20 +549,24 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
 #' location bias model.
 #'
 #' @return An S2BaK class object containing S2, SO and BaK.
+#' @param predict.fun Prediction function for SDM, which must match the model
+#' function used for s2bak.s2 and s2bak.so models).
 #' @rdname s2bak
 #' @export
 fit.s2bak <- function(formula,
                       data_obs, data_surv = NA,
                       obs, surv = NA, trait,
-                      sdm.fun = glm,
-                      predict.fun = predict.glm,
+                      sdm.fun,
+                      predict.fun,
                       background = NA,
                       nbackground = 10000,
                       overlapBackground = TRUE,
                       addSurvey = TRUE,
                       index = NA,
                       ncores = 1,
-                      readout = NA, version = c("full", "short")[1], ...) {
+                      readout = NA,
+                      version = c("full", "short")[1],
+                      ...) {
   # Output for fit.s2bak
   out <- list()
   class(out) <- "s2bak"

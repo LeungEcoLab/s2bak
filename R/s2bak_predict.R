@@ -6,7 +6,8 @@
 #'
 #' If the complete model of class `s2bak` is provided, the user can specify
 #' what type of model predictions to use to allow for specific outputs from
-#' the sub-components of the model.
+#' the sub-components of the model. When applying `predict.s2bak`,
+#' the function assumes that `predict.fun` is the same for all models.
 #'
 #' @param model Outputted model from fit.s2bak.so, fit.s2bak.s2, fit.s2bak or
 #' s2bak.combine.
@@ -55,7 +56,7 @@
 predict.s2bak <- function(model,
                           newdata,
                           trait = NA,
-                          predict.fun = predict.glm,
+                          predict.fun,
                           output = c("s2bak", "all", "so", "s2", "sobak")[1],
                           ncores = 1,
                           useReadout = FALSE,
@@ -160,7 +161,7 @@ predict.s2bak <- function(model,
       speciesList <- colnames(predictions[["sobak"]])
       # get S2 species
       spl_s2 <- colnames(predictions[["s2"]])
-      # get SO pecies
+      # get SO species
       spl_so <- speciesList[!(speciesList %in% spl_s2)]
 
       predictions[["s2bak"]] <- as.data.frame(
@@ -199,9 +200,9 @@ predict.s2bak <- function(model,
 #'
 #' @param newdata A data.frame containing the values . All variables needed for
 #' prediction should be included.
-#' @param predict.fun Predict function linked to the SDM used. The default used
-#' is \link[stats]{predict.glm}. Functions have the structure of model
-#' and newdata as the first and second arguments, respectively.
+#' @param predict.fun Predict function linked to the SDM used. Functions have
+#' the structure of model and newdata as the first and second arguments,
+#' respectively.
 #' @param useReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
@@ -216,7 +217,7 @@ predict.s2bak <- function(model,
 #' @export
 predict.s2bak.s2 <- function(model,
                              newdata,
-                             predict.fun = predict.glm,
+                             predict.fun,
                              useReadout = FALSE,
                              ncores = 1, ...) {
   cat("Predictions using", class(model), "model\n")
@@ -311,7 +312,7 @@ predict.s2bak.s2 <- function(model,
 #' @export
 predict.s2bak.so <- function(model,
                              newdata,
-                             predict.fun = predict.glm,
+                             predict.fun,
                              useReadout = FALSE,
                              ncores = 1, ...) {
   return(predict.s2bak.s2(

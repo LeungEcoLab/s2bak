@@ -236,6 +236,11 @@ predict.s2bak.s2 <- function(model,
     warning("'so' column present in newdata. All values were converted to 0.")
   }
   newdata <- as.data.frame(newdata)
+
+  if ("so" %in% colnames(newdata)) {
+    warning(paste("Column `so` provided in `newdata`: `so` is set to 0 for",
+    "prediction. Rename column if this is not intended."))
+  }
   newdata$so <- 0
 
   # Get whether we are dealing with a readout or model

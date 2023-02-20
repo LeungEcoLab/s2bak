@@ -67,6 +67,9 @@
 #' regardless of whether it is TRUE or FALSE. If there is survey data and
 #' addSurvey = FALSE, then 'so' will not be added, and must be included in
 #' the initial function call (or it will throw an error).
+#' @param index Name of the columns for indexing environment data.frame with
+#' species sightings/survey data. If left as index = NA, then it will assume
+#' row number.
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
 #' automatically set if ncores=NA. If ncores > number of available cores - 1,
 #' set to the latter.
@@ -95,6 +98,7 @@ fit.s2bak.s2 <- function(formula,
                          nbackground = 10000,
                          overlapBackground = TRUE,
                          addSurvey = TRUE,
+                         index = NA,
                          ncores = 1,
                          readout = NA, version = c("full", "short")[1], ...) {
 
@@ -107,15 +111,16 @@ fit.s2bak.s2 <- function(formula,
     stop("Invalid number of cores.")
   }
 
-  # Index name, if it's row #s or a specific column
-  if (ncol(obs) != 2 | !("species" %in% colnames(obs))) {
-    stop("Invalid columns in 'obs'.")
-  } else {
+  # If NA, assume row number, but we need the column name for obs
+  if (is.na(index)) {
     # Get column name of obs that isn't species
     ind <- colnames(obs)[which(colnames(obs) != "species")]
-    if (!(ind %in% colnames(data_obs))) {
-      ind <- NA # Row number instead of column name
+    if (length(ind) > 2) {
+      stop(paste("Invalid number of columns in `obs`:",
+      "specify index or reduce to two columns (species and index)"))
     }
+  } else {
+    ind <- index
   }
 
   # Are we fitting SO or S2?
@@ -186,7 +191,7 @@ fit.s2bak.s2 <- function(formula,
     # Also provide background indices
     if (is.na(background)) {
       # If there is a specific index name, use that, otherwise use rownumber
-      if (is.na(ind)) {
+      if (is.na(index)) {
         background <- sample(1:nrow(data_obs), nbackground)
       } else {
         background <- sample(data_obs[, ind], nbackground)
@@ -221,14 +226,15 @@ fit.s2bak.s2 <- function(formula,
   l$sdm <- foreach(i = speciesList) %dopar% {
     # Generate fitting data using 'data_obs', 'obs' and 'background'
     # If overlapBackground == FALSE, remove overlaps
-    wh_i <- which(colnames(obs) != "species")
     if (!overlapBackground) {
-      background <- background[!(background %in% obs[obs$species == i, wh_i])]
+      background <- background[!(background %in% obs[obs$species == i, ind])]
     }
+
     # Get the list of indices
-    ind2 <- c(obs[obs$species == i, wh_i], background)
+    ind2 <- c(obs[obs$species == i, ind], background)
+
     # Row number
-    if (is.na(ind)) {
+    if (is.na(index)) {
       tmp_dat <- data_obs[ind2, ]
     } else {
       # Obs index name
@@ -257,7 +263,7 @@ fit.s2bak.s2 <- function(formula,
       # Generate survey data
       tmp_surv <- as.data.frame(data_surv)
       tmp_surv$pa <- 0
-      if (is.na(ind)) {
+      if (is.na(index)) {
         tmp_surv$pa[surv[surv$species == i, wh_i]] <- 1
       } else {
         tmp_surv$pa[match(surv[surv$species == i, ind], tmp_surv[, ind])] <- 1
@@ -341,6 +347,7 @@ fit.s2bak.so <- function(formula, data_obs, obs,
                          sdm.fun = glm, background = NA,
                          nbackground = 10000,
                          overlapBackground = TRUE,
+                         index = NA,
                          ncores = 1,
                          readout = NA, version = c("full", "short")[1], ...) {
   return(fit.s2bak.s2(formula, data_obs, data_surv = NA, obs,
@@ -348,6 +355,7 @@ fit.s2bak.so <- function(formula, data_obs, obs,
                       sdm.fun = sdm.fun,
                       overlapBackground = overlapBackground,
                       nbackground = nbackground,
+                      index = index,
                       ncores = ncores, addSurvey = TRUE,
                       readout = readout, version = version, ...
   ))
@@ -375,7 +383,7 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 #' as a second-order GLM.
 #' @rdname s2bak
 #' @export
-fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
+fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
   # Check if we're missing trait species
   wh <- which(!(surv$species %in% trait$species))
   if (length(wh) > 0) {
@@ -385,7 +393,17 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
   }
   speciesList <- unique(surv$species)
 
-  ind <- colnames(surv)[which(colnames(surv) != "species")]
+  # If NA, assume row number, but we need the column name for surv
+  if (is.na(index)) {
+    # Get column name of surv that isn't species
+    ind <- colnames(surv)[which(colnames(surv) != "species")]
+    if (length(ind) > 2) {
+      stop(paste("Invalid number of columns in `surv`:",
+      "specify index or reduce to two columns (species and index)"))
+    }
+  } else {
+    ind <- index
+  }
 
   # Model outputs
   out <- list(
@@ -404,10 +422,13 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
   }
 
   # Generate polynomial predictor variable names
+  #### NEED TO REPLACE THIS WITH FORMULAE!!
   # Can replace with more complex models, if desired
   # (but right now it's GLM with this)
   tn <- colnames(trait)[colnames(trait) != "species"]
+  # Assumes row number if NA
   en <- colnames(data_surv)[colnames(data_surv) != ind]
+
   numer_env <- unlist(lapply(data_surv[1, en], is.numeric))
   numer_tr <- unlist(lapply(trait[1, tn], is.numeric))
   names_xbe <- c(en[numer_env], paste("I(", en[numer_env], "^2)", sep = ""))
@@ -431,7 +452,14 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
   # Get summed occurrences by site
   fit_l$pa <- 0
   sum_pres <- table(surv[, ind])
-  ### ind ### ASUMES ROW NUMBER HERE.
+  if (is.na(index)) {
+    # If NA, assume row number
+    fit_l$pa[as.numeric(names(sum_pres))] <- sum_pres
+  } else {
+    # Otherwise we need to match
+    fit_l$pa[match(names(sum_pres), as.character(fit_l[, ind]))] <- sum_pres
+  }
+
   fit_l$pa[as.numeric(names(sum_pres))] <- sum_pres
   # Get log-ratio
   fit_l$lr <- log((fit_l$pa + 1) / (fit_l$so_only + 1))
@@ -456,7 +484,6 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
   # Get summed occurrences by species
   fit_sp$pa <- 0
   sum_pres <- table(surv$species)
-  ### ind ### ASUMES ROW NUMBER HERE.
   fit_sp$pa[match(names(sum_pres), fit_sp$species)] <- sum_pres
 
   # Get log-ratio
@@ -481,7 +508,7 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait) {
       zso_only = NA, scale_so_l = NA, scale_so_sp = NA,
       stringsAsFactors = FALSE
     )
-    ## ind ASSUMES ROW NUMBER HERE
+
     ddf$pa[surv[surv$species == x, ind]] <- 1
 
     ddf$zso_only <- s2bak.truncate(
@@ -530,22 +557,12 @@ fit.s2bak <- function(formula,
                       nbackground = 10000,
                       overlapBackground = TRUE,
                       addSurvey = TRUE,
+                      index = NA,
                       ncores = 1,
                       readout = NA, version = c("full", "short")[1], ...) {
   # Output for fit.s2bak
   out <- list()
   class(out) <- "s2bak"
-
-  # Index name, if it's row #s or a specific column
-  if (ncol(obs) != 2 | !("species" %in% colnames(obs))) {
-    stop("Invalid columns in 'obs'.")
-  } else {
-    # Get column name of obs that isn't species
-    ind <- colnames(obs)[which(colnames(obs) != "species")]
-    if (!(ind %in% colnames(data))) {
-      ind <- NA # Row number instead of column name
-    }
-  }
 
   ## First, fit SO model
   out$s2bak.SO <- fit.s2bak.so(formula = formula,
@@ -555,6 +572,7 @@ fit.s2bak <- function(formula,
                                background = background,
                                nbackground = nbackground,
                                overlapBackground = overlapBackground,
+                               index = index,
                                ncores = ncores,
                                readout = readout, version = version, ...)
 
@@ -572,6 +590,7 @@ fit.s2bak <- function(formula,
                                nbackground = nbackground,
                                overlapBackground = overlapBackground,
                                addSurvey = addSurvey,
+                               index = index,
                                ncores = ncores, readout = readout,
                                version = version, ...)
 

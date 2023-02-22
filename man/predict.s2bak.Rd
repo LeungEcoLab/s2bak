@@ -21,6 +21,7 @@ the function assumes that \code{predict.fun} is the same for all models.}
   newdata,
   trait = NA,
   predict.fun,
+  predict.bak.fun,
   output = c("s2bak", "all", "so", "s2", "sobak")[1],
   ncores = 1,
   useReadout = FALSE,
@@ -31,7 +32,7 @@ the function assumes that \code{predict.fun} is the same for all models.}
 
 \method{predict}{s2bak.so}(model, newdata, predict.fun, useReadout = FALSE, ncores = 1, ...)
 
-\method{predict}{s2bak.bak}(model, predictions, trait, data)
+\method{predict}{s2bak.bak}(model, predictions, trait, data, predict.bak.fun)
 }
 \arguments{
 \item{model}{Output from fit.s2bak.bak(), with fitted BaK model}
@@ -44,6 +45,9 @@ prediction should be included.}
 \item{predict.fun}{Predict function linked to the SDM used. Functions have
 the structure of model and newdata as the first and second arguments,
 respectively.}
+
+\item{predict.bak.fun}{Model function for predicting bias adjustment model
+(e.g., \link[stats]{glm}). Needs to match \code{bak.fun}}
 
 \item{output}{The choice of how predictions are made using the \code{s2bak} model.
 

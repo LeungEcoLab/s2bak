@@ -334,7 +334,7 @@ fit.s2bak.s2 <- function(formula,
     saveRDS(l, fopts)
   }
 
-  if (length(l$failure) > 0) {
+  if (length(na.omit(l$failure)) > 0) {
     warning(paste0(
       "Models failed to fit for the following species: ",
       paste0(l$failure, collapse = ", ")

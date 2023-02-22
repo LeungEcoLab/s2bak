@@ -15,6 +15,8 @@
 #' @param trait Trait data, optional if output = "s2" or output = "so"
 #' @param predict.fun Prediction function for SDM, which must match the model
 #' function used for s2bak.s2 and s2bak.so models).
+#' @param predict.bak.fun Model function for predicting bias adjustment model
+#' (e.g., \link[stats]{glm}). Needs to match `bak.fun`
 #' @param output The choice of how predictions are made using the `s2bak` model.
 #'
 #' Only one type of output can be selected: sightings-only (output = "so"),
@@ -57,6 +59,7 @@ predict.s2bak <- function(model,
                           newdata,
                           trait = NA,
                           predict.fun,
+                          predict.bak.fun,
                           output = c("s2bak", "all", "so", "s2", "sobak")[1],
                           ncores = 1,
                           useReadout = FALSE,
@@ -138,7 +141,8 @@ predict.s2bak <- function(model,
     } else {
       predictions[["sobak"]] <- predict.s2bak.bak(model$s2bak.BaK,
                                               predictions = predictions[["so"]],
-                                              trait, newdata)
+                                              trait, newdata,
+                                              predict.bak.fun = predict.bak.fun)
 
     }
 
@@ -340,7 +344,8 @@ predict.s2bak.so <- function(model,
 #' @rdname predict.s2bak
 #' @export predict.s2bak.bak
 #' @export
-predict.s2bak.bak <- function(model, predictions, trait, data) {
+predict.s2bak.bak <- function(model, predictions, trait, data,
+                              predict.bak.fun) {
   cat("Predictions using s2bak.bak model\n")
   predictions <- as.matrix(predictions)
   rownames(predictions) <- 1:nrow(predictions)
@@ -348,9 +353,9 @@ predict.s2bak.bak <- function(model, predictions, trait, data) {
   colnames(predictions2) <- c("loc", "species", "pred")
 
   # scale_so_sp
-  trait$pred <- predict.glm(model$bak$bias_sp, trait)
+  trait$pred <- predict.bak.fun(model$bak$bias_sp, trait)
   # scale_so_l
-  data$pred <- predict.glm(model$bak$bias_loc, data)
+  data$pred <- predict.bak.fun(model$bak$bias_loc, data)
 
   predictions2$scale_so_l <- data$pred[predictions2$loc]
   predictions2$scale_so_sp <- trait$pred[match(predictions2$species,

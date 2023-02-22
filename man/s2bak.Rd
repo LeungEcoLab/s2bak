@@ -185,7 +185,7 @@ as final output.}
 (e.g., \link[stats]{glm}).}
 
 \item{predict.bak.fun}{Model function for predicting bias adjustment model
-(e.g., \link[stats]{glm}). Needs to match \code{bak.fun}}
+(e.g., \link[stats]{predict.glm}). Needs to match \code{bak.fun}}
 
 \item{bak.arg}{Additional arguments for \code{bak.fun}.}
 

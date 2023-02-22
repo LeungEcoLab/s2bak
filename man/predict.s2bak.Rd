@@ -47,7 +47,7 @@ the structure of model and newdata as the first and second arguments,
 respectively.}
 
 \item{predict.bak.fun}{Model function for predicting bias adjustment model
-(e.g., \link[stats]{glm}). Needs to match \code{bak.fun}}
+(e.g., \link[stats]{predict.glm}). Needs to match \code{bak.fun}}
 
 \item{output}{The choice of how predictions are made using the \code{s2bak} model.
 

@@ -15,8 +15,6 @@
 #' @param trait Trait data, optional if output = "s2" or output = "so"
 #' @param predict.fun Prediction function for SDM, which must match the model
 #' function used for s2bak.s2 and s2bak.so models).
-#' @param predict.bak.fun Model function for predicting bias adjustment model
-#' (e.g., \link[stats]{glm}). Needs to match `bak.fun`
 #' @param output The choice of how predictions are made using the `s2bak` model.
 #'
 #' Only one type of output can be selected: sightings-only (output = "so"),
@@ -339,6 +337,8 @@ predict.s2bak.so <- function(model,
 #' @param data Environmental data, with rows corresponding to rows of
 #' predictions
 #' @param trait Trait data, with column 'species' matching those in predictions.
+#' @param predict.bak.fun Model function for predicting bias adjustment model
+#' (e.g., \link[stats]{predict.glm}). Needs to match `bak.fun`
 #' @return Model predictions but with adjustments made by the BaK model.
 #' Note the default right now is type="response"
 #' @rdname predict.s2bak

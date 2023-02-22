@@ -392,7 +392,7 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 #' @param bak.fun Model function for fitting bias adjustment model
 #' (e.g., \link[stats]{glm}).
 #' @param predict.bak.fun Model function for predicting bias adjustment model
-#' (e.g., \link[stats]{glm}). Needs to match `bak.fun`
+#' (e.g., \link[stats]{predict.glm}). Needs to match `bak.fun`
 #' @param bak.arg Additional arguments for `bak.fun`.
 #' @return Bias adjustment models, the kernels (location and species),
 #' as a second-order GLM.

@@ -32,7 +32,7 @@
 #' sightings and survey data, and adjusted sightings-only predictions using BaK
 #' for species without survey data.
 #' If only `s2bak.so` and `s2bak.bak` models are provided
-#' (that is, an S2BaK class model with S2 = NULL), the functions returns only
+#' (that is, an S2BaK class model with S2 is NA), the functions returns only
 #' adjusted sightings-only predictions, requiring trait data for the species.
 #' Conversely, if only `s2bak.s2` model is provided, then predictions are made
 #' only with s2bak.predict.s2.
@@ -68,7 +68,9 @@ predict.s2bak <- function(model,
           "`s2bak`, `all`, `so`, `s2` or `sobak`"))
   }
 
-  check_mods <- unlist(lapply(model, is.null))
+  check_mods <- unlist(lapply(model, FUN = function(x){
+                                                        all(is.na(x))
+                                                      }))
   names(check_mods) <- names(model)
 
   if (all(check_mods)) {
@@ -81,19 +83,19 @@ predict.s2bak <- function(model,
   # We need to make SO predictions in every case except s2 output
   if (output %in% c("so", "sobak", "all", "s2bak")) {
     # Do we have a model?
-    # `check_mods` will be TRUE if NULL
-    if (check_mods["s2bak.SO"]) {
+    # `check_mods` will be TRUE if NA
+    if (check_mods["s2bak.so"]) {
       if (output == "all") {
-        warning(paste("s2bak.SO sub-model missing:",
+        warning(paste("s2bak.so sub-model missing:",
                       "sightings-only predictions excluded from `all`."))
 
       } else {
-        stop("s2bak.SO sub-model missing from `s2bak` model.")
+        stop("s2bak.so sub-model missing from `s2bak` model.")
 
       }
 
     } else {
-      predictions[["so"]] <- predict.s2bak.so(model$s2bak.SO,
+      predictions[["so"]] <- predict.s2bak.so(model$s2bak.so,
                                               newdata, predict.fun,
                                               useReadout = useReadout,
                                               ncores = ncores, ...)
@@ -103,19 +105,19 @@ predict.s2bak <- function(model,
 
   if (output %in% c("s2", "all", "s2bak")) {
     # Do we have a model?
-    # `check_mods` will be TRUE if NULL
-    if (check_mods["s2bak.S2"]) {
+    # `check_mods` will be TRUE if NA
+    if (check_mods["s2bak.s2"]) {
       if (output == "all") {
-        warning(paste("s2bak.S2 sub-model missing:",
+        warning(paste("s2bak.s2 sub-model missing:",
                       "survey-sightings predictions excluded from `all`."))
 
       } else {
-        stop("s2bak.S2 sub-model missing from `s2bak` model.")
+        stop("s2bak.s2 sub-model missing from `s2bak` model.")
 
       }
 
     } else {
-      predictions[["s2"]] <- predict.s2bak.s2(model$s2bak.S2,
+      predictions[["s2"]] <- predict.s2bak.s2(model$s2bak.s2,
                                               newdata, predict.fun,
                                               useReadout = useReadout,
                                               ncores = ncores, ...)
@@ -125,19 +127,19 @@ predict.s2bak <- function(model,
 
   if (output %in% c("sobak", "all", "s2bak")) {
     # We need s2bak.SO and s2bak.BaK
-    if (check_mods["s2bak.SO"] | check_mods["s2bak.BaK"]) {
+    if (check_mods["s2bak.so"] | check_mods["s2bak.bak"]) {
       if (output == "all") {
-        warning(paste("s2bak.SO, s2bak.BaK sub-model missing:",
+        warning(paste("s2bak.so, s2bak.bak sub-model missing:",
                       "bias-adjusted sightings-only predictions",
                       "excluded from `all`."))
 
       } else {
-        stop("s2bak.SO, s2bak.BaK sub-model missing from `s2bak` model.")
+        stop("s2bak.so, s2bak.bak sub-model missing from `s2bak` model.")
 
       }
 
     } else {
-      predictions[["sobak"]] <- predict.s2bak.bak(model$s2bak.BaK,
+      predictions[["sobak"]] <- predict.s2bak.bak(model$s2bak.bak,
                                               predictions = predictions[["so"]],
                                               trait, newdata,
                                               predict.bak.fun = predict.bak.fun)

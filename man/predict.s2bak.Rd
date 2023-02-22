@@ -66,7 +66,7 @@ make predictions using \link[s2bak]{s2bak.predict.s2} for species with
 sightings and survey data, and adjusted sightings-only predictions using BaK
 for species without survey data.
 If only \code{s2bak.so} and \code{s2bak.bak} models are provided
-(that is, an S2BaK class model with S2 = NULL), the functions returns only
+(that is, an S2BaK class model with S2 is NA), the functions returns only
 adjusted sightings-only predictions, requiring trait data for the species.
 Conversely, if only \code{s2bak.s2} model is provided, then predictions are made
 only with s2bak.predict.s2.

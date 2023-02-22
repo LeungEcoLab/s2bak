@@ -4,7 +4,7 @@
 \alias{combine.s2bak}
 \title{Combine SO, S2 and BaK objects}
 \usage{
-combine.s2bak(so = NULL, s2 = NULL, bak = NULL)
+combine.s2bak(so = NA, s2 = NA, bak = NA)
 }
 \arguments{
 \item{so}{output from fit.s2bak.so or fit.s2bak.s2 without survey data.}

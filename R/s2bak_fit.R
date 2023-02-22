@@ -23,19 +23,19 @@
 #' The response variable can have any name, as the function name the column
 #' accordingly.
 #' @param data_obs A data.frame containing the covariates used for fitting
-#' `s2bak.SO` and `s2bak.S2` models with sightings data.
+#' `s2bak.so` and `s2bak.s2` models with sightings data.
 #' The index of the data.frame linking sites to observations should
 #' correspond to the indices in `obs`.
 #' @param data_surv A data.frame containing the covariates used for fitting
-#' `s2bak.S2` models with survey data. The index of the data.frame linking sites
+#' `s2bak.s2` models with survey data. The index of the data.frame linking sites
 #' to survey presences should correspond to the indices in `surv`. Default is
-#' NA, as survey data is not necessary to fit `s2bak.SO` models.
+#' NA, as survey data is not necessary to fit `s2bak.so` models.
 #' @param obs A data.frame of species observations, with a column for species
 #' name (must be labelled 'species') and column of index of observations to
 #' reflect presences. If the index column name is not found in 'data', it
 #' assumes row number.
 #' @param surv A data.frame of species presences for the survey data used to
-#' fit `s2bak.S2` models (optional otherwise), with a column for species
+#' fit `s2bak.s2` models (optional otherwise), with a column for species
 #' name (must be labelled 'species') and column of index of observations to
 #' reflect presences. If the index column name is not found in 'data', it
 #' assumes row number.
@@ -566,7 +566,7 @@ fit.s2bak <- function(formula,
                       background = NA,
                       nbackground = 10000,
                       overlapBackground = TRUE,
-                      bak.args,
+                      bak.arg = list(),
                       addSurvey = TRUE,
                       index = NA,
                       ncores = 1,
@@ -591,8 +591,13 @@ fit.s2bak <- function(formula,
 
   ## Next, fit S2 model
   ## Only for species with survey data
-  if (all(is.na(surv))) stop("Missing survey data.")
+  if (all(is.na(surv))) {
+    warning("Missing survey data. s2bak.s2 and s2bak.bak models not generated.")
 
+    out$s2bak.s2 <- NA
+    out$s2bak.bak <- NA
+
+  } else {
   out$s2bak.s2 <- fit.s2bak.s2(formula = formula,
                                data_obs = data_obs,
                                data_surv = data_surv,
@@ -607,9 +612,8 @@ fit.s2bak <- function(formula,
                                ncores = ncores, readout = readout,
                                version = version, ...)
 
-  # Make predictions using out$SO (always type = "response")
-  ### THIS MIGHT BE A PROBLEM WITH OTHER PREDICT FUNCTIONS!! ####
-  predictions <- predict.s2bak.s2(out$s2bak.SO, data_surv,
+  # Make predictions using out$SO (always type = "response" - this is a problem)
+  predictions <- predict.s2bak.so(out$s2bak.so, data_surv,
                                   predict.fun = predict.fun,
                                   useReadout = !is.na(readout),
                                   ncores = ncores, type = "response")
@@ -620,6 +624,9 @@ fit.s2bak <- function(formula,
                                   bak.fun = bak.fun,
                                   predict.bak.fun = predict.bak.fun,
                                   bak.arg = bak.arg)
+
+  }
+
 
   return(out)
 }
@@ -640,7 +647,7 @@ fit.s2bak <- function(formula,
 #' @return Object of class s2bak, equivalent to having run
 #' \link[s2bak]{fit.s2bak}
 #' @export
-combine.s2bak <- function(so = NULL, s2 = NULL, bak = NULL) {
+combine.s2bak <- function(so = NA, s2 = NA, bak = NA) {
   out <- list(
     s2bak.so = so,
     s2bak.s2 = s2,

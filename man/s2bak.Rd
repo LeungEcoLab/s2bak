@@ -71,7 +71,7 @@ fit.s2bak(
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
-  bak.args,
+  bak.arg = list(),
   addSurvey = TRUE,
   index = NA,
   ncores = 1,
@@ -89,14 +89,14 @@ The response variable can have any name, as the function name the column
 accordingly.}
 
 \item{data_obs}{A data.frame containing the covariates used for fitting
-\code{s2bak.SO} and \code{s2bak.S2} models with sightings data.
+\code{s2bak.so} and \code{s2bak.s2} models with sightings data.
 The index of the data.frame linking sites to observations should
 correspond to the indices in \code{obs}.}
 
 \item{data_surv}{A data.frame containing the covariates used for fitting
-\code{s2bak.S2} models with survey data. The index of the data.frame linking sites
+\code{s2bak.s2} models with survey data. The index of the data.frame linking sites
 to survey presences should correspond to the indices in \code{surv}. Default is
-NA, as survey data is not necessary to fit \code{s2bak.SO} models.}
+NA, as survey data is not necessary to fit \code{s2bak.so} models.}
 
 \item{obs}{A data.frame of species observations, with a column for species
 name (must be labelled 'species') and column of index of observations to
@@ -104,7 +104,7 @@ reflect presences. If the index column name is not found in 'data', it
 assumes row number.}
 
 \item{surv}{A data.frame of species presences for the survey data used to
-fit \code{s2bak.S2} models (optional otherwise), with a column for species
+fit \code{s2bak.s2} models (optional otherwise), with a column for species
 name (must be labelled 'species') and column of index of observations to
 reflect presences. If the index column name is not found in 'data', it
 assumes row number.

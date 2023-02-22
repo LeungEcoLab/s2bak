@@ -114,6 +114,13 @@ model_s2bak <- combine.s2bak(model_so, model_s2, model_bak)
 ## `s2bak.S2BaK`, which calls fits the sightings-only and S2 SDMs as well as BaK
 model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                             Environment3 + Environment4,
+                          formula_site = bias_site ~ Environment1 +
+                                        Environment2 + Environment3 +
+                                        Environment4 +
+                                        I(Environment1^2) + I(Environment2^2) +
+                                        I(Environment3^2) + I(Environment4^2),
+                          formula_species = bias_species ~ Trait1 + Trait2 +
+                                          I(Trait1^2) + I(Trait2^2),
                           data_obs = dat$Environment_Sightings,
                           data_surv = dat$Environment_Sightings,
                           obs = dat$Sightings,
@@ -122,6 +129,8 @@ model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                           background = NA,
                           sdm.fun = glm,
                           predict.fun = predict.glm,
+                          bak.fun = glm,
+                          predict.bak.fun = predict.glm,
                           overlapBackground = TRUE,
                           nbackground = 2000,
                           addSurvey = TRUE,
@@ -136,6 +145,8 @@ model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
 all_predictions <- predict(model_s2bak2,
                                   dat$Environment_Sightings,
                                   trait = dat$Trait,
+                                  predict.fun = predict.glm,
+                                  predict.bak.fun = predict.glm,
                                   output = "all", type = "response"
 )
 

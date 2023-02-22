@@ -221,6 +221,7 @@ fit.s2bak.s2 <- function(formula,
   # Add 'so' if we have survey data and addSurvey = TRUE
   if (!all(is.na(surv)) & addSurvey) {
     formula <- s2bak.addPred(formula)
+    l$options$call <- formula
   }
 
   # Fit SDM for each species
@@ -313,7 +314,7 @@ fit.s2bak.s2 <- function(formula,
   if (length(wh) > 0) {
     l$failure <- speciesList[wh]
   } else {
-    l$failure <- NULL
+    l$failure <- NA
   }
 
 
@@ -366,14 +367,20 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 
 #' @title Generate bias adjustment kernel (BaK) for a fitted sightings-only SDM.
 #'
-#' @description Builds bias adjustment kernel (BaK) for a fitted sightings-only
-#' SDM. Provides three models, as generalized linear models (GLMs): modelling
-#' location bias, modelling species bias and an adjustment model that combines
+#' @description \link[s2bak]{fit.s2bak.bak} fit a bias-adjustment kernel (BaK)
+#' for a fitted sightings-only SDM.
+#' Provides three models: Location bias, species bias and the final
+#' bias-adjustment kernel. The user can specify nodelling function
+#' for species nad location biases, while the final bias-adjustment kernel
+#' functions as a generalized linear model (\link[stats]{glm}) that combines
 #' model predictions with the output from the other two models.
 #'
-#' The dataset assumes the rows for the predictions, survey and data arguments
-#' all align and match.
-#'
+#' @param formula_site Formula for fitting survey site bias, with
+#' locational bias as a function of spatial predictions. The response variable,
+#' bias, is generated and therefore its variable name can be anything.
+#' @param formula_species Formula for fitting species bias, with species bias
+#' as a function of species traits. The response variable is generated and
+#' therefore its name can be anything.
 #' @param predictions Sightings-only (SO) model predictions over the survey
 #' sites for all species, beyond those found in the survey data, as a matrix
 #' with columns for each species and rows for each site.
@@ -382,11 +389,26 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 #' Like with the predictions, the species in the dataset do not necessarily
 #' have to possess survey data, but will be used in the final adjustment model
 #' as final output.
+#' @param bak.fun Model function for fitting bias adjustment model
+#' (e.g., \link[stats]{glm}).
+#' @param predict.bak.fun Model function for predicting bias adjustment model
+#' (e.g., \link[stats]{glm}). Needs to match `bak.fun`
+#' @param bak.arg Additional arguments for `bak.fun`.
 #' @return Bias adjustment models, the kernels (location and species),
 #' as a second-order GLM.
 #' @rdname s2bak
 #' @export
-fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
+fit.s2bak.bak <- function(formula_site,
+                          formula_species,
+                          predictions,
+                          data_surv,
+                          surv,
+                          trait,
+                          bak.fun,
+                          predict.bak.fun,
+                          index = NA,
+                          bak.arg = list()) {
+
   # Check if we're missing trait species
   wh <- which(!(surv$species %in% trait$species))
   if (length(wh) > 0) {
@@ -411,7 +433,11 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
   # Model outputs
   out <- list(
     speciesList = speciesList,
-    speciesListFull = unique(c(surv$species, trait$species))
+    speciesListFull = unique(c(surv$species, trait$species)),
+    options = list(call = list(bias_site = formula_site,
+                                bias_species = formula_species),
+                    bak.fun = bak.fun,
+                    nsites = nrow(data_surv))
   )
   class(out) <- "s2bak.bak"
 
@@ -422,30 +448,6 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
   if (nrow(predictions) != nrow(data_surv)) {
     stop(paste("Differing rows for predictions and environment data:",
                "sites/rows must correspond with each other.\n"))
-  }
-
-  # Generate polynomial predictor variable names
-  #### NEED TO REPLACE THIS WITH FORMULAE!!
-  # Can replace with more complex models, if desired
-  # (but right now it's GLM with this)
-  tn <- colnames(trait)[colnames(trait) != "species"]
-  # Assumes row number if NA
-  en <- colnames(data_surv)[colnames(data_surv) != ind]
-
-  numer_env <- unlist(lapply(data_surv[1, en], is.numeric))
-  numer_tr <- unlist(lapply(trait[1, tn], is.numeric))
-  names_xbe <- c(en[numer_env], paste("I(", en[numer_env], "^2)", sep = ""))
-  names_xbt <- c(tn[numer_tr], paste("I(", tn[numer_tr], "^2)", sep = ""))
-
-  # Get mean for replacing missing values (for the full dataset)
-  msd <- rep(NA, time = length(tn))
-  names(msd) <- tn
-  for (vv in tn) {
-    if (numer_tr[vv]) {
-      msd[vv] <- mean(trait[, vv], na.rm = TRUE)
-    } else {
-      msd[vv] <- 0
-    }
   }
 
   # Location biases, based on environment
@@ -471,16 +473,6 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
   trait2 <- trait[match(speciesList, trait$species), ]
   fit_sp <- data.frame(species = speciesList, stringsAsFactors = FALSE)
   fit_sp <- cbind(fit_sp, trait2[, -which(colnames(trait2) == "species")])
-  for (i in 1:nrow(fit_sp)) {
-    ## Does this work? Should we just assume that this is provided
-    #### TBD ####
-    wh <- which(is.na(fit_sp[i, ]))
-    if (length(wh) > 0) {
-      warning(paste("Missing trait data, which were imputed",
-                    "using mean of the column.\n"))
-      fit_sp[i, wh] <- msd[colnames(wh)]
-    }
-  }
 
   # Get summed predictions by species
   fit_sp$so_only <- apply(predictions[, speciesList], 2, sum, na.rm = TRUE)
@@ -492,18 +484,27 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
   # Get log-ratio
   fit_sp$lr <- log((fit_sp$pa + 1) / (fit_sp$so_only + 1))
 
+  ## Rename response variables to match our formulas
+  colnames(fit_l)[colnames(fit_l) == "lr"] <- all.vars(formula_site)[1]
+  colnames(fit_sp)[colnames(fit_sp) == "lr"] <- all.vars(formula_species)[1]
+
   out$bak <- list()
-  # Fit bias kernels
-  out$bak$bias_loc <- glm(formula(
-    paste("lr ~", paste(names_xbe, collapse = "+"))),
-    data = fit_l)
-  out$bak$bias_sp <- glm(formula(
-    paste("lr ~", paste(names_xbt, collapse = "+"))),
-    data = fit_sp)
+
+  # Fit bias kernels by appending the arguments
+  bak.arg_l <- c(list(formula = formula_site,
+                    data = as.data.frame(fit_l)),
+                  bak.arg)
+  out$bak$bias_loc <- do.call(bak.fun, bak.arg_l)
+
+  bak.arg_sp <- c(list(formula = formula_species,
+                    data = as.data.frame(fit_sp)),
+                  bak.arg)
+  out$bak$bias_sp <- do.call(bak.fun, bak.arg_sp)
+
 
   # Generate the final data.frame to model bias adjustment (based on mk_bak)
   # Include all species, beyond just the ones found in the survey
-  trait$pred <- predict(out$bak$bias_sp, trait)
+  trait$pred <- predict.bak.fun(out$bak$bias_sp, trait)
   # `x` = species name
   fit_adj <- lapply(speciesList, FUN = function(x) {
     ddf <- data.frame(
@@ -524,7 +525,7 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
       -15,
       15
     )
-    ddf$scale_so_l <- predict(out$bak$bias_loc, data_surv)
+    ddf$scale_so_l <- predict.bak.fun(out$bak$bias_loc, data_surv)
     ddf$scale_so_sp <- trait$pred[trait$species == x]
     return(ddf)
   })
@@ -554,13 +555,18 @@ fit.s2bak.bak <- function(predictions, data_surv, surv, trait, index = NA) {
 #' @rdname s2bak
 #' @export
 fit.s2bak <- function(formula,
+                      formula_site,
+                      formula_species,
                       data_obs, data_surv = NA,
                       obs, surv = NA, trait,
                       sdm.fun,
                       predict.fun,
+                      bak.fun,
+                      predict.bak.fun,
                       background = NA,
                       nbackground = 10000,
                       overlapBackground = TRUE,
+                      bak.args,
                       addSurvey = TRUE,
                       index = NA,
                       ncores = 1,
@@ -572,7 +578,7 @@ fit.s2bak <- function(formula,
   class(out) <- "s2bak"
 
   ## First, fit SO model
-  out$s2bak.SO <- fit.s2bak.so(formula = formula,
+  out$s2bak.so <- fit.s2bak.so(formula = formula,
                                data_obs = data_obs,
                                obs = obs,
                                sdm.fun = sdm.fun,
@@ -587,7 +593,7 @@ fit.s2bak <- function(formula,
   ## Only for species with survey data
   if (all(is.na(surv))) stop("Missing survey data.")
 
-  out$s2bak.S2 <- fit.s2bak.s2(formula = formula,
+  out$s2bak.s2 <- fit.s2bak.s2(formula = formula,
                                data_obs = data_obs,
                                data_surv = data_surv,
                                obs = obs,
@@ -608,7 +614,12 @@ fit.s2bak <- function(formula,
                                   useReadout = !is.na(readout),
                                   ncores = ncores, type = "response")
 
-  out$s2bak.BaK <- fit.s2bak.bak(predictions, data_surv, surv, trait)
+  out$s2bak.bak <- fit.s2bak.bak(formula_site = formula_site,
+                                  formula_species = formula_species,
+                                  predictions, data_surv, surv, trait,
+                                  bak.fun = bak.fun,
+                                  predict.bak.fun = predict.bak.fun,
+                                  bak.arg = bak.arg)
 
   return(out)
 }
@@ -631,9 +642,9 @@ fit.s2bak <- function(formula,
 #' @export
 combine.s2bak <- function(so = NULL, s2 = NULL, bak = NULL) {
   out <- list(
-    s2bak.SO = so,
-    s2bak.S2 = s2,
-    s2bak.BaK = bak
+    s2bak.so = so,
+    s2bak.s2 = s2,
+    s2bak.bak = bak
   )
   class(out) <- "s2bak"
   return(out)

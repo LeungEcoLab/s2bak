@@ -94,9 +94,17 @@ so_preds <- predict(model_so,
                     ncores = 1, type = "response")
 
 ## Fit BaK using survey predictions generated from sightings-only model
-## This is super unintuitive...
-model_bak <- fit.s2bak.bak(so_preds, dat$Environment_Survey,
-                            dat$Survey, dat$Trait)
+model_bak <- fit.s2bak.bak(bias_site ~ Environment1 + Environment2 +
+                                        Environment3 + Environment4 +
+                                        I(Environment1^2) + I(Environment2^2) +
+                                        I(Environment3^2) + I(Environment4^2),
+                          bias_species ~ Trait1 + Trait2 +
+                                          I(Trait1^2) + I(Trait2^2),
+                      so_preds, dat$Environment_Survey,
+                      dat$Survey, dat$Trait,
+                      bak.fun = glm,
+                      predict.bak.fun = predict.glm,
+                      bak.arg = list(family = gaussian))
 
 ## We can combine all the three objects into a single s2bak object
 ## This produces the same output as using `s2bak.S2BaK` (see below)

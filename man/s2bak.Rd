@@ -15,11 +15,12 @@ fit.s2bak.s2(
   data_surv = NA,
   obs,
   surv = NA,
-  sdm.fun = glm,
+  sdm.fun,
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
   addSurvey = TRUE,
+  index = NA,
   ncores = 1,
   readout = NA,
   version = c("full", "short")[1],
@@ -30,31 +31,49 @@ fit.s2bak.so(
   formula,
   data_obs,
   obs,
-  sdm.fun = glm,
+  sdm.fun,
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
+  index = NA,
   ncores = 1,
   readout = NA,
   version = c("full", "short")[1],
   ...
 )
 
-fit.s2bak.bak(predictions, data_surv, surv, trait)
+fit.s2bak.bak(
+  formula_site,
+  formula_species,
+  predictions,
+  data_surv,
+  surv,
+  trait,
+  bak.fun,
+  predict.bak.fun,
+  index = NA,
+  bak.arg = list()
+)
 
 fit.s2bak(
   formula,
+  formula_site,
+  formula_species,
   data_obs,
   data_surv = NA,
   obs,
   surv = NA,
   trait,
-  sdm.fun = glm,
-  predict.fun = predict.glm,
+  sdm.fun,
+  predict.fun,
+  bak.fun,
+  predict.bak.fun,
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
+  bak.args,
   addSurvey = TRUE,
+  index = NA,
   ncores = 1,
   readout = NA,
   version = c("full", "short")[1],
@@ -97,10 +116,10 @@ it will fit the SDMs as presence-only models with the function of choice.
 NOTE: Assumes all species are provided in the survey data, and that they are
 surveyed over the same sites (i.e. matrix-type).}
 
-\item{sdm.fun}{Model (as function) used for fitting (the default is
-\link[stats]{glm}). The function must have the formula
-as their first argument, and 'data' as the parameter for the dataset
-(including presences and background sites within the data.frame).}
+\item{sdm.fun}{Model (as function) used for fitting. The function must
+have the formula as their first argument, and 'data' as the parameter
+for the dataset (including presences and background sites
+within the data.frame).}
 
 \item{background}{Background sites (pseudo-absences) used to fit the
 presence-only model, provided as a vector of indices of data (following the
@@ -123,6 +142,10 @@ regardless of whether it is TRUE or FALSE. If there is survey data and
 addSurvey = FALSE, then 'so' will not be added, and must be included in
 the initial function call (or it will throw an error).}
 
+\item{index}{Name of the columns for indexing environment data.frame with
+species sightings/survey data. If left as index = NA, then it will assume
+row number.}
+
 \item{ncores}{Number of cores to fit the SDMs, default is 1 core but can be
 automatically set if ncores=NA. If ncores > number of available cores - 1,
 set to the latter.}
@@ -140,6 +163,14 @@ which is useful when dealing with many species or large datasets.}
 
 \item{...}{Other arguments that are passed to the SDM function (sdm.fun).}
 
+\item{formula_site}{Formula for fitting survey site bias, with
+locational bias as a function of spatial predictions. The response variable,
+bias, is generated and therefore its variable name can be anything.}
+
+\item{formula_species}{Formula for fitting species bias, with species bias
+as a function of species traits. The response variable is generated and
+therefore its name can be anything.}
+
 \item{predictions}{Sightings-only (SO) model predictions over the survey
 sites for all species, beyond those found in the survey data, as a matrix
 with columns for each species and rows for each site.}
@@ -149,6 +180,17 @@ with 'species' as a column and relevant traits for the remainder.
 Like with the predictions, the species in the dataset do not necessarily
 have to possess survey data, but will be used in the final adjustment model
 as final output.}
+
+\item{bak.fun}{Model function for fitting bias adjustment model
+(e.g., \link[stats]{glm}).}
+
+\item{predict.bak.fun}{Model function for predicting bias adjustment model
+(e.g., \link[stats]{glm}). Needs to match \code{bak.fun}}
+
+\item{bak.arg}{Additional arguments for \code{bak.fun}.}
+
+\item{predict.fun}{Prediction function for SDM, which must match the model
+function used for s2bak.s2 and s2bak.so models).}
 }
 \value{
 An object of class "s2bak.s2", providing fitted SDMs for each species
@@ -177,13 +219,13 @@ large datasets and many species. To reduce issues with memory,
 readout and the version = "short" may be used, which does not output the
 fitted models but instead saves it to the directory specified in readout.
 
-Builds bias adjustment kernel (BaK) for a fitted sightings-only
-SDM. Provides three models, as generalized linear models (GLMs): modelling
-location bias, modelling species bias and an adjustment model that combines
+\link[s2bak]{fit.s2bak.bak} fit a bias-adjustment kernel (BaK)
+for a fitted sightings-only SDM.
+Provides three models: Location bias, species bias and the final
+bias-adjustment kernel. The user can specify nodelling function
+for species nad location biases, while the final bias-adjustment kernel
+functions as a generalized linear model (\link[stats]{glm}) that combines
 model predictions with the output from the other two models.
-
-The dataset assumes the rows for the predictions, survey and data arguments
-all align and match.
 
 Build S2BaK from top to bottom. Has functionality for
 parallelization, but the default is 1 core.

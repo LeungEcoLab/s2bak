@@ -129,10 +129,32 @@ fit.s2bak.s2 <- function(formula,
   # Get the list of species in the data
   # (S2 models may have fewer species than SO)
   speciesListFull <- as.character(unique(obs$species))
+
+  out_opts <- list(
+    call = formula,
+    functions = list(
+      sdm = sdm.fun
+    ),
+    version = version,
+    readout = readout,
+    overlapBackground = overlapBackground
+  )
+
+  # Output for the model
+  # Saves the species list and functions used for fitting/predicting
+  # Also save the arguments
   if (mode == "s2bak.so") {
     speciesList <- speciesListFull
+    l <- s2bak.so(speciesList = speciesList,
+                  options = out_opts,
+                  empty = FALSE
+                  )
   } else if (mode == "s2bak.s2") {
     speciesList <- as.character(unique(surv$species))
+    l <- s2bak.s2(speciesList = speciesList,
+                  options = out_opts,
+                  empty = FALSE
+                  )
   }
 
   cat("Fitting", mode, "model for",
@@ -167,28 +189,10 @@ fit.s2bak.s2 <- function(formula,
 
   }
 
-  # Output for the model
-  # Saves the species list and functions used for fitting/predicting
-  # Also save the arguments
-  l <- list(
-    speciesList = speciesList,
-    options = list(
-      call = formula,
-      functions = list(
-        sdm = sdm.fun
-      ),
-      version = version,
-      readout = readout,
-      overlapBackground = overlapBackground
-    )
-  )
-
-  class(l) <- mode
-
   # Add background options to the output
   if (all(is.na(background))) {
-    l$options$background <- "Randomly sampled background sites"
-    l$options$nbackground <- nbackground
+    l@options$background <- "Randomly sampled background sites"
+    l@options$nbackground <- nbackground
     # Sample background sites, if NA
     # Also provide background indices
     if (is.na(background)) {
@@ -200,10 +204,10 @@ fit.s2bak.s2 <- function(formula,
       }
     }
   } else {
-    l$options$background <- "User-provided background sites"
-    l$options$nbackground <- length(background)
+    l@options$background <- "User-provided background sites"
+    l@options$nbackground <- length(background)
   }
-  l$options$sitesbackground <- background
+  l@options$sitesbackground <- background
 
   # Save our options, and also add a filepath
   if (!is.na(readout)) {
@@ -221,12 +225,12 @@ fit.s2bak.s2 <- function(formula,
   # Add 'so' if we have survey data and addSurvey = TRUE
   if (!all(is.na(surv)) & addSurvey) {
     formula <- s2bak.addPred(formula)
-    l$options$call <- formula
+    l@options$call <- formula
   }
 
   # Fit SDM for each species
   # Saves output of each one as well
-  l$sdm <- foreach(i = speciesList) %dopar% {
+  l@sdm <- foreach(i = speciesList) %dopar% {
     # Generate fitting data using 'data_obs', 'obs' and 'background'
     # If overlapBackground == FALSE, remove overlaps
     if (!overlapBackground) {
@@ -308,18 +312,16 @@ fit.s2bak.s2 <- function(formula,
       stop("Invalid version. Please specify either 'long' or 'short'")
     }
   }
-  names(l$sdm) <- speciesList
+  names(l@sdm) <- speciesList
 
-  wh <- which(unlist(lapply(l$sdm, is.null)))
+  wh <- which(unlist(lapply(l@sdm, is.null)))
   if (length(wh) > 0) {
-    l$failure <- speciesList[wh]
-  } else {
-    l$failure <- NA
+    l@failure <- speciesList[wh]
   }
 
 
   if (version == "short") {
-    l$sdm <- NULL
+    l@sdm <- NULL
   } else if (!(version %in% c("full", "short"))) {
     stop("Invalid version. Please specify either 'long' or 'short'")
   }
@@ -329,15 +331,15 @@ fit.s2bak.s2 <- function(formula,
     lf <- paste0(readout, gsub("\\s+", "_", speciesList), "-", class(l), ".rds")
     names(lf) <- speciesList
     # Don't include options in the output list of files
-    l$options$readout <- lf
+    l@options$readout <- lf
     # Save opts one more time
     saveRDS(l, fopts)
   }
 
-  if (length(na.omit(l$failure)) > 0) {
+  if (length(l@failure) > 0) {
     warning(paste0(
       "Models failed to fit for the following species: ",
-      paste0(l$failure, collapse = ", ")
+      paste0(l@failure, collapse = ", ")
     ))
   }
 
@@ -431,18 +433,18 @@ fit.s2bak.bak <- function(formula_site,
   }
 
   # Model outputs
-  out <- list(
+  out <- s2bak.bak(
     speciesList = speciesList,
     speciesListFull = unique(c(surv$species, trait$species)),
     options = list(call = list(bias_site = formula_site,
                                 bias_species = formula_species),
                     bak.fun = bak.fun,
-                    nsites = nrow(data_surv))
+                    nsites = nrow(data_surv)),
+    empty = FALSE
   )
-  class(out) <- "s2bak.bak"
 
   cat("Fitting bias adjustment kernel on", length(speciesList),
-      "survey species and", length(out$speciesListFull), "species total.\n")
+      "survey species and", length(out@speciesListFull), "species total.\n")
 
   # Throw error if predictions, surv and data are not aligned
   if (nrow(predictions) != nrow(data_surv)) {
@@ -488,23 +490,23 @@ fit.s2bak.bak <- function(formula_site,
   colnames(fit_l)[colnames(fit_l) == "lr"] <- all.vars(formula_site)[1]
   colnames(fit_sp)[colnames(fit_sp) == "lr"] <- all.vars(formula_species)[1]
 
-  out$bak <- list()
+  out@bak <- list()
 
   # Fit bias kernels by appending the arguments
   bak.arg_l <- c(list(formula = formula_site,
                     data = as.data.frame(fit_l)),
                   bak.arg)
-  out$bak$bias_loc <- do.call(bak.fun, bak.arg_l)
+  out@bak$bias_loc <- do.call(bak.fun, bak.arg_l)
 
   bak.arg_sp <- c(list(formula = formula_species,
                     data = as.data.frame(fit_sp)),
                   bak.arg)
-  out$bak$bias_sp <- do.call(bak.fun, bak.arg_sp)
+  out@bak$bias_sp <- do.call(bak.fun, bak.arg_sp)
 
 
   # Generate the final data.frame to model bias adjustment (based on mk_bak)
   # Include all species, beyond just the ones found in the survey
-  trait$pred <- predict.bak.fun(out$bak$bias_sp, trait)
+  trait$pred <- predict.bak.fun(out@bak$bias_sp, trait)
   # `x` = species name
   fit_adj <- lapply(speciesList, FUN = function(x) {
     ddf <- data.frame(
@@ -525,14 +527,14 @@ fit.s2bak.bak <- function(formula_site,
       -15,
       15
     )
-    ddf$scale_so_l <- predict.bak.fun(out$bak$bias_loc, data_surv)
+    ddf$scale_so_l <- predict.bak.fun(out@bak$bias_loc, data_surv)
     ddf$scale_so_sp <- trait$pred[trait$species == x]
     return(ddf)
   })
   fit_adj <- do.call(rbind, fit_adj)
 
   # Fit bias adjustment model
-  out$bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l,
+  out@bak$bias_adj <- glm(pa ~ zso_only + scale_so_sp + scale_so_l,
                           family = "binomial", data = fit_adj)
 
   return(out)
@@ -574,11 +576,10 @@ fit.s2bak <- function(formula,
                       version = c("full", "short")[1],
                       ...) {
   # Output for fit.s2bak
-  out <- list()
-  class(out) <- "s2bak"
+  out <- s2bak()
 
   ## First, fit SO model
-  out$s2bak.so <- fit.s2bak.so(formula = formula,
+  out@s2bak.so <- fit.s2bak.so(formula = formula,
                                data_obs = data_obs,
                                obs = obs,
                                sdm.fun = sdm.fun,
@@ -594,11 +595,8 @@ fit.s2bak <- function(formula,
   if (all(is.na(surv))) {
     warning("Missing survey data. s2bak.s2 and s2bak.bak models not generated.")
 
-    out$s2bak.s2 <- NA
-    out$s2bak.bak <- NA
-
   } else {
-  out$s2bak.s2 <- fit.s2bak.s2(formula = formula,
+  out@s2bak.s2 <- fit.s2bak.s2(formula = formula,
                                data_obs = data_obs,
                                data_surv = data_surv,
                                obs = obs,
@@ -612,13 +610,13 @@ fit.s2bak <- function(formula,
                                ncores = ncores, readout = readout,
                                version = version, ...)
 
-  # Make predictions using out$SO (always type = "response" - this is a problem)
-  predictions <- predict.s2bak.so(out$s2bak.so, data_surv,
+  # Make predictions using out@SO (always type = "response" - this is a problem)
+  predictions <- predict.s2bak.so(out@s2bak.so, data_surv,
                                   predict.fun = predict.fun,
                                   useReadout = !is.na(readout),
                                   ncores = ncores, type = "response")
 
-  out$s2bak.bak <- fit.s2bak.bak(formula_site = formula_site,
+  out@s2bak.bak <- fit.s2bak.bak(formula_site = formula_site,
                                   formula_species = formula_species,
                                   predictions, data_surv, surv, trait,
                                   bak.fun = bak.fun,
@@ -641,18 +639,67 @@ fit.s2bak <- function(formula,
 #' the use of s2bak predict functions will not apply S2 but instead only run
 #' predictions with sightings-only and BaK adjustment.
 #'
+#' Components of `s2bak` models can be added or replaced using the
+#' \link[s2bak]{replace.s2bak} function.
+#'
 #' @param so output from fit.s2bak.so or fit.s2bak.s2 without survey data.
 #' @param s2 output from fit.s2bak.s2 function
 #' @param bak output from fit.s2bak.bak function
+#'
+#' @examples
+#' ## See ?fit.s2bak
+#'
 #' @return Object of class s2bak, equivalent to having run
 #' \link[s2bak]{fit.s2bak}
 #' @export
 combine.s2bak <- function(so = NA, s2 = NA, bak = NA) {
-  out <- list(
-    s2bak.so = so,
-    s2bak.s2 = s2,
-    s2bak.bak = bak
-  )
-  class(out) <- "s2bak"
+  out <- s2bak()
+
+  if(isS4(so)) out@s2bak.so <- so
+  if(isS4(s2)) out@s2bak.s2 <- s2
+  if(isS4(bak)) out@s2bak.bak <- bak
+
   return(out)
+}
+
+#' @title Add model to object of class s2bak
+#'
+#' @description s2bak objects can be incomplete, for example when using the
+#' \link[s2bak]{combine.s2bak} function without specifying all arguments.
+#' This function allows the field of a given `s2bak` object to be replaced
+#' with a new fitted model of class `s2bak.so`, `s2bak.s2` or `s2bak.bak`.
+#'
+#' @param x object of class `s2bak.so`, `s2bak.s2` or `s2bak.bak`
+#' @param object object of class `s2bak` with fields to be replaced
+#'
+#' #' @examples
+#' ## See ?fit.s2bak
+#'
+#' @return Object of class s2bak, with the object slot replaced with `x`
+#' @export
+replace.s2bak <- function(x, object) {
+  # Check correct classes
+  if (class(object) != "s2bak") {
+    stop("Invalid class provided. `object` must be of class `s2bak`")
+  }
+
+  ### REPLACE VALUE
+  switch(as.character(class(x)),
+    s2bak.so = {
+      object@s2bak.so <- x
+    },
+    s2bak.s2 = {
+      object@s2bak.s2 <- x
+    },
+    s2bak.bak = {
+      object@s2bak.bak <- x
+    },
+    {
+      stop(paste("Invalid class provided. `x` must be of class `s2bak.so`,",
+        "`s2bak.s2` or `s2bak.bak`")
+      )
+    }
+  )
+
+  return(object)
 }

@@ -110,6 +110,11 @@ model_bak <- fit.s2bak.bak(bias_site ~ Environment1 + Environment2 +
 ## This produces the same output as using `s2bak.S2BaK` (see below)
 model_s2bak <- combine.s2bak(model_so, model_s2, model_bak)
 
+# Values can be partially combined, and also we can also replace models using
+# replace.s2bak
+model_s2bak <- combine.s2bak(model_so, model_s2)
+model_s2bak <- replace.s2bak(model_bak, model_s2bak)
+
 ## All of the above is done step-by-step, but we can do all of it using
 ## `s2bak.S2BaK`, which calls fits the sightings-only and S2 SDMs as well as BaK
 model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +

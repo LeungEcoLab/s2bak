@@ -68,8 +68,9 @@ predict.s2bak <- function(model,
           "`s2bak`, `all`, `so`, `s2` or `sobak`"))
   }
 
+  # Check if empty = TRUE
   check_mods <- unlist(lapply(model, FUN = function(x){
-                                                        all(is.na(x))
+                                                        return(x@empty)
                                                       }))
   names(check_mods) <- names(model)
 
@@ -95,7 +96,7 @@ predict.s2bak <- function(model,
       }
 
     } else {
-      predictions[["so"]] <- predict.s2bak.so(model$s2bak.so,
+      predictions[["so"]] <- predict.s2bak.so(model@s2bak.so,
                                               newdata, predict.fun,
                                               useReadout = useReadout,
                                               ncores = ncores, ...)
@@ -117,7 +118,7 @@ predict.s2bak <- function(model,
       }
 
     } else {
-      predictions[["s2"]] <- predict.s2bak.s2(model$s2bak.s2,
+      predictions[["s2"]] <- predict.s2bak.s2(model@s2bak.s2,
                                               newdata, predict.fun,
                                               useReadout = useReadout,
                                               ncores = ncores, ...)
@@ -139,7 +140,7 @@ predict.s2bak <- function(model,
       }
 
     } else {
-      predictions[["sobak"]] <- predict.s2bak.bak(model$s2bak.bak,
+      predictions[["sobak"]] <- predict.s2bak.bak(model@s2bak.bak,
                                               predictions = predictions[["so"]],
                                               trait, newdata,
                                               predict.bak.fun = predict.bak.fun)
@@ -249,14 +250,14 @@ predict.s2bak.s2 <- function(model,
   newdata$so <- 0
 
   # Get whether we are dealing with a readout or model
-  if (!is.null(model$sdm) & !useReadout) {
+  if (!is.null(model@sdm) & !useReadout) {
     cat("Reading models from argument\n")
     dir <- FALSE
-  } else if (useReadout | !is.null(model$options$readout)) {
+  } else if (useReadout | !is.null(model@options$readout)) {
     cat("Reading models from directory\n")
     dir <- TRUE
 
-    lf <- model$options$readout
+    lf <- model@options$readout
 
     if (any(!(file.exists(lf)))) stop("Missing models in directory.")
   } else {
@@ -264,7 +265,7 @@ predict.s2bak.s2 <- function(model,
   }
 
   # Get length of species
-  speciesList <- model$speciesList
+  speciesList <- model@speciesList
 
   tmp <- as.data.frame(matrix(
     NA,
@@ -284,7 +285,7 @@ predict.s2bak.s2 <- function(model,
         stop("Invalid model, incorrect species-filename association")
       }
     } else {
-      tmp_sdm <- model$sdm[[i]]
+      tmp_sdm <- model@sdm[[i]]
     }
 
     # NULL model
@@ -355,9 +356,9 @@ predict.s2bak.bak <- function(model, predictions, trait, data,
   colnames(predictions2) <- c("loc", "species", "pred")
 
   # scale_so_sp
-  trait$pred <- predict.bak.fun(model$bak$bias_sp, trait)
+  trait$pred <- predict.bak.fun(model@bak$bias_sp, trait)
   # scale_so_l
-  data$pred <- predict.bak.fun(model$bak$bias_loc, data)
+  data$pred <- predict.bak.fun(model@bak$bias_loc, data)
 
   predictions2$scale_so_l <- data$pred[predictions2$loc]
   predictions2$scale_so_sp <- trait$pred[match(predictions2$species,
@@ -368,7 +369,7 @@ predict.s2bak.bak <- function(model, predictions, trait, data,
     15
   )
 
-  predictions2$pred_out <- predict(model$bak$bias_adj,
+  predictions2$pred_out <- predict(model@bak$bias_adj,
                                    predictions2,
                                    type = "response")
 

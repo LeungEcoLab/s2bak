@@ -25,4 +25,11 @@ fit.s2bak function, and can be used in the same situations.
 Models can be partially provided, for instance only SO and BaK, in which case
 the use of s2bak predict functions will not apply S2 but instead only run
 predictions with sightings-only and BaK adjustment.
+
+Components of \code{s2bak} models can be added or replaced using the
+\link[s2bak]{replace.s2bak} function.
+}
+\examples{
+## See ?fit.s2bak
+
 }

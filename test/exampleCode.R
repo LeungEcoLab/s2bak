@@ -9,10 +9,10 @@ setwd("../test/")
 
 #### INSTALL `s2bak` ####
 
-## Should re-install every time we want to test a new version
-library(devtools)
-library(roxygen2)
 if (0) {
+  ## Should re-install every time we want to test a new version
+  library(devtools)
+  library(roxygen2)
   tryCatch(detach("package:s2bak", unload = TRUE))
   install_github("https://github.com/LeungEcoLab/s2bak", force = TRUE)
 }
@@ -72,11 +72,28 @@ model_s2 <- fit.s2bak.s2(formula = pa ~ Environment1 + Environment2 +
                          family = binomial
 )
 
+# We can specify GAM with SO as an interaction, meaning that survey-sightings
+# will have a different effect
+model_s2_gam <- fit.s2bak.s2(formula = pa ~ s(Environment1, so) +
+                               s(Environment2, so) +
+                               s(Environment3, so) + s(Environment4, so),
+                         data_obs = dat$Environment_Sightings,
+                         data_surv = dat$Environment_Survey,
+                         obs = dat$Sightings,
+                         surv = dat$Survey,
+                         ncores = 1,
+                         sdm.fun = mgcv::gam,
+                         nbackground = 2000,
+                         survey_var = "so",
+                         addSurvey = FALSE,
+                         family = binomial
+)
+
 ## If we wanted to provide our own background data, we would provide the indices
 ## For instance with target-group background sampling
 bgsites <- tgb_sample(obs = dat$Sightings, nbackground = 2000)
 model_s2_tgb <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
-                           Environment3 + Environment4,
+                           Environment3 + Environment4 + so,
                          data_obs = dat$Environment_Sightings,
                          data_surv = dat$Environment_Survey,
                          obs = dat$Sightings,

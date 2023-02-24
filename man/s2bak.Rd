@@ -89,7 +89,10 @@ Assumes the structure follows "Y ~ X". Alternatively, a named list of
 formulas can be provided corresponding to species names.
 In this case, species will be fit using their corresponding formula.
 The response variable can have any name, as the function name the column
-accordingly.}
+accordingly.
+
+For \code{s2bak.s2} models, the \code{survey_var} should be specified in the formula.
+Otherwise, addSurvey can be set to TRUE to add it as an additional predictor.}
 
 \item{data_obs}{A data.frame containing the covariates used for fitting
 \code{s2bak.so} and \code{s2bak.s2} models with sightings data.
@@ -136,14 +139,13 @@ observations should be included. By default, it allows overlap. If FALSE,
 number of background sites may be less than specified or provided.}
 
 \item{survey_var}{Character name for the predictor variable determining
-a site is sightings-only (1) or survey data (0).
-The column is automatically within the function, and is used to define with
-formula.}
+a site is sightings-only (1) or survey data (0), the default is called "so".
+The column is automatically created within the function, and is used to with
+the formulas.}
 
 \item{addSurvey}{Whether the binary variable survey_var should be added to
-formula(s), denoting whether sites are sightings-only or survey. If survey
-data is not provided or if survey_var is already in the formula,
-then survey_var will not be added to the formula(s)
+formula(s). If survey data is not provided or if survey_var is already
+in the formula, then survey_var will not be added to the formula(s)
 regardless of addSurvey = TRUE. If there is survey data and
 addSurvey = FALSE, then 'so' will not be added, and it will throw a warning.}
 

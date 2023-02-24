@@ -234,9 +234,6 @@ predict.s2bak.s2 <- function(model,
                              ncores = 1, ...) {
   cat("Predictions using", class(model), "model\n")
 
-  # Get survey_var
-  survey_var <- model@survey_var
-
   # Set cores
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
@@ -246,14 +243,18 @@ predict.s2bak.s2 <- function(model,
     stop("Invalid number of cores.")
   }
 
-  # Add SO = 0, regardless of model class
-  # Throw a warning if they have 'so' already in the data
-  if (survey_var %in% colnames(newdata)) {
-    warning(paste(survey_var, "column present in newdata, with same name as",
-    "`survey_var`. All values were converted to 0 for prediction."))
+  # Get survey_var with S2 models
+  if (class(model) == "s2bak.s2") {
+    survey_var <- model@survey_var
+
+    # Throw a warning if they have 'so' already in the data
+    if (survey_var %in% colnames(newdata)) {
+      warning(paste(survey_var, "column present in newdata, with same name as",
+      "`survey_var`. All values were converted to 0 for prediction."))
+    }
+    newdata <- as.data.frame(newdata)
+    newdata[, survey_var] <- 0
   }
-  newdata <- as.data.frame(newdata)
-  newdata[, survey_var] <- 0
 
   # Get whether we are dealing with a readout or model
   if (!is.null(model@sdm) & !useReadout) {

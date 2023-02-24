@@ -19,7 +19,8 @@ fit.s2bak.s2(
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
-  addSurvey = TRUE,
+  survey_var = "so",
+  addSurvey = FALSE,
   index = NA,
   ncores = 1,
   readout = NA,
@@ -69,6 +70,7 @@ fit.s2bak(
   predict.fun,
   bak.fun,
   predict.bak.fun,
+  truncate = c(1e-04, 0.9999),
   background = NA,
   nbackground = 10000,
   overlapBackground = TRUE,
@@ -111,11 +113,8 @@ reflect presences. If the index column name is not found in 'data', it
 assumes row number.
 It will add the an additional binary predictor to the formula(s), \code{so},
 denoting whether a sites is sightings-only (1) or survey data (0).
-If 'so' is already in formula (e.g. if modifying
-the variable in any way, then set addSurvey = FALSE). If left as NA,
-it will fit the SDMs as presence-only models with the function of choice.
-NOTE: Assumes all species are provided in the survey data, and that they are
-surveyed over the same sites (i.e. matrix-type).}
+If left as NA, it will fit the SDMs as presence-only models with the
+function of choice.}
 
 \item{sdm.fun}{Model (as function) used for fitting. The function must
 have the formula as their first argument, and 'data' as the parameter
@@ -136,12 +135,17 @@ if background = NA.}
 observations should be included. By default, it allows overlap. If FALSE,
 number of background sites may be less than specified or provided.}
 
-\item{addSurvey}{Whether the binary variable 'so' should be added to the
+\item{survey_var}{Character name for the predictor variable determining
+a site is sightings-only (1) or survey data (0).
+The column is automatically within the function, and is used to define with
+formula.}
+
+\item{addSurvey}{Whether the binary variable survey_var should be added to
 formula(s), denoting whether sites are sightings-only or survey. If survey
-data is not provided, then 'so' will not be added to the formula(s)
-regardless of whether it is TRUE or FALSE. If there is survey data and
-addSurvey = FALSE, then 'so' will not be added, and must be included in
-the initial function call (or it will throw an error).}
+data is not provided or if survey_var is already in the formula,
+then survey_var will not be added to the formula(s)
+regardless of addSurvey = TRUE. If there is survey data and
+addSurvey = FALSE, then 'so' will not be added, and it will throw a warning.}
 
 \item{index}{Name of the columns for indexing environment data.frame with
 species sightings/survey data. If left as index = NA, then it will assume
@@ -218,7 +222,7 @@ SDM, with the default being 1 core.
 
 The fit.s2bak.s2 function fits SDMs using species sightings,
 background sites and survey sites, differentiating between them using a
-binary 'so' predictor, denoting sightings-only (1) or survey (0).
+binary survey_var predictor, denoting sightings-only (1) or survey (0).
 
 Saving SDMs to the output may be computationally intensive, particularly with
 large datasets and many species. To reduce issues with memory,

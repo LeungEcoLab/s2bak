@@ -9,7 +9,7 @@
 #'
 #' The fit.s2bak.s2 function fits SDMs using species sightings,
 #' background sites and survey sites, differentiating between them using a
-#' binary 'so' predictor, denoting sightings-only (1) or survey (0).
+#' binary survey_var predictor, denoting sightings-only (1) or survey (0).
 #'
 #' Saving SDMs to the output may be computationally intensive, particularly with
 #' large datasets and many species. To reduce issues with memory,
@@ -41,11 +41,8 @@
 #' assumes row number.
 #' It will add the an additional binary predictor to the formula(s), `so`,
 #' denoting whether a sites is sightings-only (1) or survey data (0).
-#' If 'so' is already in formula (e.g. if modifying
-#' the variable in any way, then set addSurvey = FALSE). If left as NA,
-#' it will fit the SDMs as presence-only models with the function of choice.
-#' NOTE: Assumes all species are provided in the survey data, and that they are
-#' surveyed over the same sites (i.e. matrix-type).
+#' If left as NA, it will fit the SDMs as presence-only models with the
+#' function of choice.
 #' @param sdm.fun Model (as function) used for fitting. The function must
 #' have the formula as their first argument, and 'data' as the parameter
 #' for the dataset (including presences and background sites
@@ -61,12 +58,16 @@
 #' @param overlapBackground Whether sampled background sites that overlap with
 #' observations should be included. By default, it allows overlap. If FALSE,
 #' number of background sites may be less than specified or provided.
-#' @param addSurvey Whether the binary variable 'so' should be added to the
+#' @param survey_var Character name for the predictor variable determining
+#' a site is sightings-only (1) or survey data (0).
+#' The column is automatically within the function, and is used to define with
+#' formula.
+#' @param addSurvey Whether the binary variable survey_var should be added to
 #' formula(s), denoting whether sites are sightings-only or survey. If survey
-#' data is not provided, then 'so' will not be added to the formula(s)
-#' regardless of whether it is TRUE or FALSE. If there is survey data and
-#' addSurvey = FALSE, then 'so' will not be added, and must be included in
-#' the initial function call (or it will throw an error).
+#' data is not provided or if survey_var is already in the formula,
+#' then survey_var will not be added to the formula(s)
+#' regardless of addSurvey = TRUE. If there is survey data and
+#' addSurvey = FALSE, then 'so' will not be added, and it will throw a warning.
 #' @param index Name of the columns for indexing environment data.frame with
 #' species sightings/survey data. If left as index = NA, then it will assume
 #' row number.
@@ -97,10 +98,12 @@ fit.s2bak.s2 <- function(formula,
                          background = NA,
                          nbackground = 10000,
                          overlapBackground = TRUE,
-                         addSurvey = TRUE,
+                         survey_var = "so",
+                         addSurvey = FALSE,
                          index = NA,
                          ncores = 1,
-                         readout = NA, version = c("full", "short")[1], ...) {
+                         readout = NA,
+                         version = c("full", "short")[1], ...) {
 
   # Set cores
   registerDoParallel()
@@ -153,6 +156,7 @@ fit.s2bak.s2 <- function(formula,
     speciesList <- as.character(unique(surv$species))
     l <- s2bak.s2(speciesList = speciesList,
                   options = out_opts,
+                  survey_var = survey_var,
                   empty = FALSE
                   )
   }
@@ -223,9 +227,28 @@ fit.s2bak.s2 <- function(formula,
   yy <- as.character(ifelse(flong, formula[[1]][[2]], formula[[2]]))
 
   # Add 'so' if we have survey data and addSurvey = TRUE
-  if (!all(is.na(surv)) & addSurvey) {
-    formula <- s2bak.addPred(formula)
-    l@options$call <- formula
+  # But if some of them have it and
+  if (addSurvey) {
+    has_so <- unlist(lapply(formula, FUN = function(x) {
+      return(survey_var %in% all.vars(x))
+    }))
+    # If some already have it, then throw warning
+    if (any(has_so)) {
+      if (flong) {
+        warning(paste("addSurvey = TRUE and some formula(s) already contain",
+                      "`survey_var`. The following species left as-is:",
+                      paste(names(formula)[has_so], collapse = ", ")
+                ))
+      } else {
+        warning(paste("addSurvey = TRUE and formula already contains",
+                      "`survey_var`."))
+      }
+    }
+    # Add it to the ones that are missing it:addSurvey
+    # addPred will automatically check if survey_var is in it,
+    # and not include it
+    formula <- s2bak.addPred(formula, survey_var)
+
   }
 
   # Fit SDM for each species
@@ -276,16 +299,17 @@ fit.s2bak.s2 <- function(formula,
         tmp_surv$pa[match(surv[surv$species == i, ind], tmp_surv[, ind])] <- 1
       }
 
-      # Add 'so': sightings only for `tmp_dat` (1) or
+      # Add `survey_var`: sightings only for `tmp_dat` (1) or
       # survey data for `tmp_surv` (0)
-      tmp_dat$so <- 1
-      tmp_surv$so <- 0
+      tmp_dat[, survey_var] <- 1
+      tmp_surv[, survey_var] <- 0
 
       tmp_dat <- rbind(tmp_dat, tmp_surv)
 
-      # Check if 'so' is in our formula.. if it isn't throw an error
-      if (!("so" %in% labels(terms(ff)))) {
-        stop("Provided survey data but 'so' is missing as a predictor")
+      # Check if `survey_var` is in our formula.. if it isn't throw an error
+      if (!(survey_var %in% all.vars(ff))) {
+        warning(paste("Provided survey data but survey variable", survey_var,
+                    "is missing in formula. Include or addSurvey = TRUE."))
       }
     }
 
@@ -570,6 +594,7 @@ fit.s2bak <- function(formula,
                       predict.fun,
                       bak.fun,
                       predict.bak.fun,
+                      truncate = c(0.0001, 0.9999),
                       background = NA,
                       nbackground = 10000,
                       overlapBackground = TRUE,
@@ -626,6 +651,7 @@ fit.s2bak <- function(formula,
                                   predictions, data_surv, surv, trait,
                                   bak.fun = bak.fun,
                                   predict.bak.fun = predict.bak.fun,
+                                  truncate = truncate,
                                   bak.arg = bak.arg)
 
   }

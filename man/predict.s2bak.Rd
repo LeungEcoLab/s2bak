@@ -106,6 +106,11 @@ predictions}
 very close to zero or one cannot be meaningfully distinguished, however
 these extreme values may have disproportionally large consequences on
 likelihoods due to logit transformation.}
+
+\item{survey_var}{Character name for the predictor variable determining
+a site is sightings-only (1) or survey data (0).
+The column is automatically within the function, and is used to define with
+formula.}
 }
 \value{
 Model predictions as a data.frame with columns for each species and
@@ -125,6 +130,9 @@ model class is provided and makes the appropriate adjustments.
 \link[s2bak]{predict.s2bak.so} is a wrapper function
 that detects the class of the inputed model and makes the appropriate
 prediction.
+
+For \code{s2bak.s2} models, the binary variable denoting sightings-only or survey
+is stored and will be checked by the function.
 
 predict.s2bak.bak adjusts sightings-only predictions using a
 fitted s2bak.bak model, using trait, environmental data and

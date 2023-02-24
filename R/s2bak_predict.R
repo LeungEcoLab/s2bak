@@ -198,6 +198,9 @@ predict.s2bak <- function(model,
 #' that detects the class of the inputed model and makes the appropriate
 #' prediction.
 #'
+#' For `s2bak.s2` models, the binary variable denoting sightings-only or survey
+#' is stored and will be checked by the function.
+#'
 #' @param model Models of class `s2bak.so` or `s2bak.s2` can
 #' be used to make predictions for each species fitted.
 #' If the object does not have stored SDMs, it will check to see if there
@@ -208,6 +211,10 @@ predict.s2bak <- function(model,
 #' @param predict.fun Predict function linked to the SDM used. Functions have
 #' the structure of model and newdata as the first and second arguments,
 #' respectively.
+#' @param survey_var Character name for the predictor variable determining
+#' a site is sightings-only (1) or survey data (0).
+#' The column is automatically within the function, and is used to define with
+#' formula.
 #' @param useReadout logical; if TRUE will do readout over stored SDMs.
 #' If there are no SDMs then it will automatically check for readout
 #' @param ncores Number of cores to fit the SDMs, default is 1 core but can be
@@ -227,6 +234,9 @@ predict.s2bak.s2 <- function(model,
                              ncores = 1, ...) {
   cat("Predictions using", class(model), "model\n")
 
+  # Get survey_var
+  survey_var <- model@survey_var
+
   # Set cores
   registerDoParallel()
   if (is.numeric(ncores) | is.na(ncores)) {
@@ -238,16 +248,12 @@ predict.s2bak.s2 <- function(model,
 
   # Add SO = 0, regardless of model class
   # Throw a warning if they have 'so' already in the data
-  if ("so" %in% colnames(newdata)) {
-    warning("'so' column present in newdata. All values were converted to 0.")
+  if (survey_var %in% colnames(newdata)) {
+    warning(paste(survey_var, "column present in newdata, with same name as",
+    "`survey_var`. All values were converted to 0 for prediction."))
   }
   newdata <- as.data.frame(newdata)
-
-  if ("so" %in% colnames(newdata)) {
-    warning(paste("Column `so` provided in `newdata`: `so` is set to 0 for",
-    "prediction. Rename column if this is not intended."))
-  }
-  newdata$so <- 0
+  newdata[, survey_var] <- 0
 
   # Get whether we are dealing with a readout or model
   if (!is.null(model@sdm) & !useReadout) {

@@ -62,7 +62,7 @@ s2bak.addPred <- function(formula, pred = "so") {
   }
 
   out <- lapply(formula, FUN = function(x) {
-    if (!(pred %in% labels(terms(x)))) {
+    if (!(pred %in% all.vars(x))) {
       ff <- as.character(x)
       ff[3] <- paste(ff[3], "+", pred)
       ff <- formula(paste(ff[2], ff[1], ff[3]))

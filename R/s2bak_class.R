@@ -73,6 +73,7 @@ s2bak.s2 <- setClass(Class = "s2bak.s2",
                     slots = c(speciesList = "character",
                               options = "list",
                               sdm = "list",
+                              survey_var = "character",
                               failure = "character",
                               empty = "logical"
                     ),

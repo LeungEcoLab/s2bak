@@ -59,6 +59,7 @@ fit.s2bak.bak(
 
 fit.s2bak(
   formula,
+  formula_survey = NA,
   formula_site,
   formula_species,
   data_obs,
@@ -200,6 +201,9 @@ these extreme values may have disproportionally large consequences on
 likelihoods due to logit transformation.}
 
 \item{bak.arg}{Additional arguments for \code{bak.fun}.}
+
+\item{formula_survey}{For \code{fit.s2bak}, we can specify a separate formula for
+\code{fit.s2bak.s2}. If left as NA it will use \code{formula}.}
 
 \item{predict.fun}{Prediction function for SDM, which must match the model
 function used for s2bak.s2 and s2bak.so models).}

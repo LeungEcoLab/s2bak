@@ -8,6 +8,15 @@ dst <- function(x, y) {
   return((x^2 + y^2)^.5)
 }
 
+#' @title Logit tranformation
+#' @description Logit transform values
+#' @param x numeric. Balue to transform
+#' @return logit-transformed `x`
+logit <- function(x) {
+  return(log(x/(1-x)))
+}
+
+
 #' @title Truncate values based on min and max input
 #'
 #' @description Truncate provided numerical values based on a defined minimum

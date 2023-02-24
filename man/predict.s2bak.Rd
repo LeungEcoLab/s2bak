@@ -32,7 +32,14 @@ the function assumes that \code{predict.fun} is the same for all models.}
 
 \method{predict}{s2bak.so}(model, newdata, predict.fun, useReadout = FALSE, ncores = 1, ...)
 
-\method{predict}{s2bak.bak}(model, predictions, trait, data, predict.bak.fun)
+\method{predict}{s2bak.bak}(
+  model,
+  predictions,
+  trait,
+  data,
+  predict.bak.fun,
+  truncate = c(1e-04, 0.9999)
+)
 }
 \arguments{
 \item{model}{Output from fit.s2bak.bak(), with fitted BaK model}
@@ -94,6 +101,11 @@ data.frame correspond to newdata rows.}
 
 \item{data}{Environmental data, with rows corresponding to rows of
 predictions}
+
+\item{truncate}{Numeric minimum and maximum range of predicted values. Values
+very close to zero or one cannot be meaningfully distinguished, however
+these extreme values may have disproportionally large consequences on
+likelihoods due to logit transformation.}
 }
 \value{
 Model predictions as a data.frame with columns for each species and

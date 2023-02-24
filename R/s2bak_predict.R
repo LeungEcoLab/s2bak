@@ -342,13 +342,18 @@ predict.s2bak.so <- function(model,
 #' @param trait Trait data, with column 'species' matching those in predictions.
 #' @param predict.bak.fun Model function for predicting bias adjustment model
 #' (e.g., \link[stats]{predict.glm}). Needs to match `bak.fun`
+#' @param truncate Numeric minimum and maximum range of predicted values. Values
+#' very close to zero or one cannot be meaningfully distinguished, however
+#' these extreme values may have disproportionally large consequences on
+#' likelihoods due to logit transformation.
 #' @return Model predictions but with adjustments made by the BaK model.
 #' Note the default right now is type="response"
 #' @rdname predict.s2bak
 #' @export predict.s2bak.bak
 #' @export
 predict.s2bak.bak <- function(model, predictions, trait, data,
-                              predict.bak.fun) {
+                              predict.bak.fun,
+                              truncate = c(0.0001, 0.9999)) {
   cat("Predictions using s2bak.bak model\n")
   predictions <- as.matrix(predictions)
   rownames(predictions) <- 1:nrow(predictions)
@@ -365,8 +370,8 @@ predict.s2bak.bak <- function(model, predictions, trait, data,
                                                trait$species)]
   predictions2$zso_only <- s2bak.truncate(
     as.vector(as.matrix(-log((1 - predictions2$pred) / predictions2$pred))),
-    -15,
-    15
+    logit(truncate[1]),
+    logit(truncate[2])
   )
 
   predictions2$pred_out <- predict(model@bak$bias_adj,

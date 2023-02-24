@@ -51,6 +51,7 @@ fit.s2bak.bak(
   trait,
   bak.fun,
   predict.bak.fun,
+  truncate = c(1e-04, 0.9999),
   index = NA,
   bak.arg = list()
 )
@@ -186,6 +187,11 @@ as final output.}
 
 \item{predict.bak.fun}{Model function for predicting bias adjustment model
 (e.g., \link[stats]{predict.glm}). Needs to match \code{bak.fun}}
+
+\item{truncate}{Numeric minimum and maximum range of predicted values. Values
+very close to zero or one cannot be meaningfully distinguished, however
+these extreme values may have disproportionally large consequences on
+likelihoods due to logit transformation.}
 
 \item{bak.arg}{Additional arguments for \code{bak.fun}.}
 

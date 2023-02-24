@@ -395,6 +395,10 @@ fit.s2bak.so <- function(formula, data_obs, obs,
 #' (e.g., \link[stats]{glm}).
 #' @param predict.bak.fun Model function for predicting bias adjustment model
 #' (e.g., \link[stats]{predict.glm}). Needs to match `bak.fun`
+#' @param truncate Numeric minimum and maximum range of predicted values. Values
+#' very close to zero or one cannot be meaningfully distinguished, however
+#' these extreme values may have disproportionally large consequences on
+#' likelihoods due to logit transformation.
 #' @param bak.arg Additional arguments for `bak.fun`.
 #' @return Bias adjustment models, the kernels (location and species),
 #' as a second-order GLM.
@@ -408,6 +412,7 @@ fit.s2bak.bak <- function(formula_site,
                           trait,
                           bak.fun,
                           predict.bak.fun,
+                          truncate = c(0.0001, 0.9999),
                           index = NA,
                           bak.arg = list()) {
 
@@ -524,8 +529,8 @@ fit.s2bak.bak <- function(formula_site,
             predictions[, x]
         ))
       ),
-      -15,
-      15
+      logit(truncate[1]),
+      logit(truncate[2])
     )
     ddf$scale_so_l <- predict.bak.fun(out@bak$bias_loc, data_surv)
     ddf$scale_so_sp <- trait$pred[trait$species == x]

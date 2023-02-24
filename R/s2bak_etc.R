@@ -58,7 +58,7 @@ s2bak.addPred <- function(formula, pred = "so") {
     flong <- TRUE
   } else {
     # Throw error in all other cases than list and language
-    stop("Invalid formula. Please provide a formula or list of formulas.")
+    stop("Invalid `formula`. Please provide a formula or list of formulas.")
   }
 
   out <- lapply(formula, FUN = function(x) {

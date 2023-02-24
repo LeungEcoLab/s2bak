@@ -56,9 +56,10 @@ model_so_gam <- fit.s2bak.so(pa ~ s(Environment1) + s(Environment2) +
 )
 
 ## Fitting using S2 (that is, including survey data into the SDM)
-## This will limit it the number of models fit to the species with survey data!
-model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
-                           Environment3 + Environment4,
+## `survey_var` should be included in the formula, or set addSurvey = TRUE
+## Which will simply add so as an additional predictor
+model_s2 <- fit.s2bak.s2(formula = pa ~ Environment1 + Environment2 +
+                           Environment3 + Environment4 + so,
                          data_obs = dat$Environment_Sightings,
                          data_surv = dat$Environment_Survey,
                          obs = dat$Sightings,
@@ -66,6 +67,8 @@ model_s2 <- fit.s2bak.s2(pa ~ Environment1 + Environment2 +
                          ncores = 1,
                          sdm.fun = glm,
                          nbackground = 2000,
+                         survey_var = "so",
+                         addSurvey = FALSE,
                          family = binomial
 )
 

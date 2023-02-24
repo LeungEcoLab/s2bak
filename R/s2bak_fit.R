@@ -176,6 +176,9 @@ fit.s2bak.s2 <- function(formula,
   if (typeof(formula) == "language") {
     # Only one formula
     flong <- FALSE
+    # Convert to list for simplicity with other lapply's
+    formula <- list(formula)
+
   } else if (typeof(formula) == "list") {
     # Multiple formulas, but we still need to check if all species are there
     flong <- TRUE
@@ -224,30 +227,43 @@ fit.s2bak.s2 <- function(formula,
   }
 
   # get response variable name
-  yy <- as.character(ifelse(flong, formula[[1]][[2]], formula[[2]]))
+  yy <- all.vars(formula[[1]])[1]
 
   # Add 'so' if we have survey data and addSurvey = TRUE
   # But if some of them have it and
-  if (mode == "s2bak.s2" & addSurvey) {
+  if (mode == "s2bak.s2") {
+    # Check if the formulas have so
     has_so <- unlist(lapply(formula, FUN = function(x) {
       return(survey_var %in% all.vars(x))
     }))
-    # If some already have it, then throw warning
-    if (any(has_so)) {
-      if (flong) {
-        warning(paste("addSurvey = TRUE and some formula(s) already contain",
-                      "`survey_var`. The following species left as-is:",
-                      paste(names(formula)[has_so], collapse = ", ")
-                ))
-      } else {
-        warning(paste("addSurvey = TRUE and formula already contains",
-                      "`survey_var`."))
+
+    if (addSurvey) {
+      # If some already have it, then throw warning
+      if (any(has_so)) {
+        if (flong) {
+          warning(paste("addSurvey = TRUE and some formula(s) already contain",
+                        "`survey_var`. The following species left as-is:",
+                        paste(names(formula)[has_so], collapse = ", ")
+                  ))
+        } else {
+          warning(paste("addSurvey = TRUE and formula already contains",
+                        "`survey_var`."))
+        }
       }
+      # Add it to the ones that are missing it:addSurvey
+      # addPred will automatically check if survey_var is in it,
+      # and not include it
+      formula <- s2bak.addPred(formula, survey_var)
+    } else {
+      # Check for missing `survey_var` in any of the formulas
+      # Check if `survey_var` is in our formula.. if it isn't throw an error
+      if (!all(has_so)) {
+        stop(paste("Fitting s2bak.s2 model but missing `survey_var` variable",
+                    "from formula(s):", survey_var,
+                    ". Include or addSurvey = TRUE."))
+      }
+
     }
-    # Add it to the ones that are missing it:addSurvey
-    # addPred will automatically check if survey_var is in it,
-    # and not include it
-    formula <- s2bak.addPred(formula, survey_var)
 
   }
 
@@ -282,12 +298,13 @@ fit.s2bak.s2 <- function(formula,
     if (flong) {
       ff <- formula[[i]]
     } else {
-      ff <- formula
+      ff <- formula[[1]]
     }
 
     # Add survey data, if it exists
     # This is easier: if species present at site, then 1, otherwise 0
-    if (!all(is.na(surv))) {
+    if (mode == "s2bak.s2") {
+
       # If overlapBackground == FALSE, remove overlaps
       wh_i <- which(colnames(surv) != "species")
       # Generate survey data
@@ -306,11 +323,6 @@ fit.s2bak.s2 <- function(formula,
 
       tmp_dat <- rbind(tmp_dat, tmp_surv)
 
-      # Check if `survey_var` is in our formula.. if it isn't throw an error
-      if (!(survey_var %in% all.vars(ff))) {
-        warning(paste("Provided survey data but survey variable", survey_var,
-                    "is missing in formula. Include or addSurvey = TRUE."))
-      }
     }
 
     tmp_sdm <- tryCatch(sdm.fun(ff, data = tmp_dat, ...),

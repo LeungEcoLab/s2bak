@@ -137,8 +137,10 @@ model_s2bak <- replace.s2bak(model_bak, model_s2bak)
 
 ## All of the above is done step-by-step, but we can do all of it using
 ## `s2bak.S2BaK`, which calls fits the sightings-only and S2 SDMs as well as BaK
-model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
+model_s2bak2 <- fit.s2bak(formula = pa ~ Environment1 + Environment2 +
                             Environment3 + Environment4,
+                          formula_survey = pa ~ Environment1 + Environment2 +
+                            Environment3 + Environment4 + so,
                           formula_site = bias_site ~ Environment1 +
                                         Environment2 + Environment3 +
                                         Environment4 +
@@ -158,7 +160,8 @@ model_s2bak2 <- fit.s2bak(pa ~ Environment1 + Environment2 +
                           predict.bak.fun = predict.glm,
                           overlapBackground = TRUE,
                           nbackground = 2000,
-                          addSurvey = TRUE,
+                          survey_var = "so",
+                          addSurvey = FALSE,
                           ncores = 1,
                           readout = NA,
                           version = "full",

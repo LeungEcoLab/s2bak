@@ -594,12 +594,15 @@ fit.s2bak.bak <- function(formula_site,
 #' Assumes that all columns/variables in 'data' are relevant for the
 #' location bias model.
 #'
+#' @param formula_survey For `fit.s2bak`, we can specify a separate formula for
+#' `fit.s2bak.s2`. If left as NA it will use `formula`.
 #' @return An S2BaK class object containing S2, SO and BaK.
 #' @param predict.fun Prediction function for SDM, which must match the model
 #' function used for s2bak.s2 and s2bak.so models).
 #' @rdname s2bak
 #' @export
 fit.s2bak <- function(formula,
+                      formula_survey = NA,
                       formula_site,
                       formula_species,
                       data_obs, data_surv = NA,
@@ -640,7 +643,11 @@ fit.s2bak <- function(formula,
     warning("Missing survey data. s2bak.s2 and s2bak.bak models not generated.")
 
   } else {
-  out@s2bak.s2 <- fit.s2bak.s2(formula = formula,
+
+  if (all(is.na(formula_survey))) {
+    formula_site <- formula
+  }
+  out@s2bak.s2 <- fit.s2bak.s2(formula = formula_site,
                                data_obs = data_obs,
                                data_surv = data_surv,
                                obs = obs,

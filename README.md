@@ -15,7 +15,7 @@ The `s2bak` package, currently hosted on GitHub, can be installed using `devtool
 ```R
 # install.packages("devtools")
 library(devtools)
-install_github("https://github.com/LeungLab2/s2bak")
+install_github("https://github.com/LeungEcoLab/s2bak")
 library(s2bak)
 ```
 

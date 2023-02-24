@@ -228,7 +228,7 @@ fit.s2bak.s2 <- function(formula,
 
   # Add 'so' if we have survey data and addSurvey = TRUE
   # But if some of them have it and
-  if (addSurvey) {
+  if (mode == "s2bak.s2" & addSurvey) {
     has_so <- unlist(lapply(formula, FUN = function(x) {
       return(survey_var %in% all.vars(x))
     }))
